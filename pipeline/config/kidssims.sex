@@ -35,7 +35,7 @@ MASK_TYPE		CORRECT			# type of detection MASKing: can be one of
 PHOT_APERTURES		6.5			# MAG_APER aperture diameter(s) in pixels
 PHOT_AUTOPARAMS		2.5, 3.5	# MAG_AUTO parameters: <Kron_fact>,<min_radius>
 SATUR_LEVEL		50000.0			# level (in ADUs) at which arises saturation
-MAG_ZEROPOINT	 31.160756			# magnitude zero-point
+MAG_ZEROPOINT	 24.66			# magnitude zero-point
 MAG_GAMMA		4.0				# gamma of emulsion (for photographic scans)
 GAIN			0.0				# detector gain in e-/ADU.
 PIXEL_SCALE		0.214			# size of pixel in arcsec (0=use FITS WCS info).
