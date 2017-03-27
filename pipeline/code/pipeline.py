@@ -361,11 +361,9 @@ def createLensFITCatalog():
     print '      Creating LensFIT Catalog'
     sextractorCatalog = '%s%s' % (TMPDIR, parser.get('sextractor','cataloge_path'))
     outputPath = '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog'))
-    data = np.loadtxt(sextractorCatalog)
-    f = open(outputPath, 'w')
-    for row in data:
-        f.write('%f %f %f %f \n' % (row[2], row[3], row[6], row[13]))
-    f.close()
+    data = pyfits.getdata(sextractorCatalog)
+    reduced_data = np.array([data['X_WORLD'], data['Y_WORLD'], data['MAG_AUTO'], data['NUMBER']]).T
+    np.savetxt(outputPath, reduced_data)
 
 '''
 Prepares the LensFIT type asci catalog. Generated
