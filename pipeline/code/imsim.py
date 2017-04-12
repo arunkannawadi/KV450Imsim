@@ -163,7 +163,7 @@ def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
     ## g = (1-q)/(1+q)
     psf_g1,psf_g2 = psf_e1/(2-psf_e), psf_e2/(2-psf_e)
 
-    psf = galsim.Moffat(beta=moffat_beta,fwhm=fwhm).shear(g1=psf_g1,g2=psf_g2)
+    psf = galsim.Moffat(beta=moffat_beta,fwhm=fwhm,trunc=4.5*fwhm).shear(g1=psf_g1,g2=psf_g2)
 
     return psf
 
