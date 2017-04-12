@@ -82,54 +82,10 @@ wcs = galsim.AstropyWCS(wcs_filename)
 #wcs = galsim.AstropyWCS("/disks/shear14/KiDS_simulations/Cosmos/AW_images/KIDS450_150.1_2.2_r_sci.fits")
 canvas_bounds = galsim.fits.read(wcs_filename).bounds
 
-## Get the galaxy parameters
-## Griffith parameters
-obj_no = input_data.field('OBJNO').astype(int) ## OBJNO
-n = input_data.field('N_GALFIT_HI').astype(float)  ## Sersic index n
-hlr = input_data.field('RE_GALFIT_HI').astype(float)  ## half-light radius / effective radius
-q = input_data.field('BA_GALFIT_HI')  ## axis ratio
-beta = input_data.field('PA_GALFIT_HI') ## position angle
 
-## Matching parameters - used for cuts
-rank = input_data.field('rank') ## matching rank
-distance2d = input_data.field('distance2d') ## 2D distance after matching
-distance3d = input_data.field('distance3d') ## 3D distance after matching
-## Other fields that might be used for the cuts
-weight = input_data.field('weight') ## lensfit weights
-
-try:
-    MASK_all = input_data.MASK
-    mask = ~(np.array(MASK_all&0xfc3c,dtype=bool))
-except:
-    mask = np.zeros(input_data.shape[0],dtype=bool)
-    logger.warning("Input catalogue does not have inbuilt masks")
-
-## Positions (Theli astrometry when available, else use the Griffith ones)
-RA = input_data.field('RA_THELI').copy() ## RA
-DEC = input_data.field('DEC_THELI').copy() ## DEC
-RA[rank==0], DEC[rank==0] = input_data.field('RA')[rank==0], input_data.field('DEC')[rank==0]
-
-## Use Theli magnitudes when available. Else, use MAGR
-mag = input_data.field('MAG_AUTO_THELI').copy()
-mag[rank==0] = input_data.field('MAGR')[rank==0]
-
-#mag = catalog.field('MAGR')[IMAGING=='COSMOS']## magnitude for galaxies that are not in KiDS catalogue
-#mag = catalog.field('MAG_GAAP_{0}_CALIB'.format(filter_name))[IMAGING=='COSMOS']
-#unscaled_flux = catalog.field('FLUX_GAAP_{0}'.format(filter_name))[IMAGING=='COSMOS']
-
-## Magnitude to flux calculation
-## Avoid exponentiating magnitudes directly to minimize overflow/numerical errors
-#F0 =  gain*exp_time*(10**(0.4*magAB_zeropoint)) ## for FLUX_GAAP
-
-## Flux is zero by default!, except for those with positive magnitudes (many)
-flux = np.zeros_like(mag,dtype=float)
-##flux[mag>0] = 10**(-0.4*(mag[mag>0])-magAB_zeropoint)
-flux[mag>0] = 10**(-0.4*(mag[mag>0]-magAB_zeropoint))
-#assert flux[rank!=0]==input_data.field('FLUX_AUTO_THELI')[rank!=0]
-
-## Default cut
-default_cuts = (mask)&(rank>0)&(distance2d<0.5)&(weight>5)
-print "Default cuts have", default_cuts.sum(), " galaxies."
+### Default cut
+#default_cuts = (mask)&(rank>0)&(distance2d<0.5)&(weight>5)
+#print "Default cuts have", default_cuts.sum(), " galaxies."
 
 #if not 'KiDSCatalogue' in locals():
 #    print "Loading KiDS catalogue ... "
@@ -188,7 +144,7 @@ def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
 
     ## TO DO: Make this input compulsory
     if psf_params_filename is None:
-        psf_params_filename = '/disks/shear15/KiDS/ImSim/pipeline/utils/65_psfs.txt'
+        psf_params_filename = '/disks/shear15/KiDS/ImSim/pipeline/utils/5_psfs.txt'
 
     psf_params_file = open(psf_params_filename,'r')
     psf_params_lines = psf_params_file.readlines()
@@ -200,7 +156,7 @@ def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
     moffat_beta = float(psf_params[-1])
     psf_e2 = float(psf_params[-2])
     psf_e1 = float(psf_params[-3])
-    fwhm = float(psf_params[-4])
+    fwhm = float(psf_params[-4]) #arcsec
 
     ## e = 1 - q
     psf_e = np.sqrt(psf_e1**2+psf_e2**2)
@@ -236,7 +192,60 @@ def getKiDSPSF(filter_name='r'):
     
     return psf
 
-def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=0, n_rotations=4, g1=0.0, g2=0.0, fixed_stamp_size=None):
+def getStarImages(PSF,star_catalogue, ditherArray, exp_id=0):
+    """ Obtain a canvas image containing stars.
+
+        @param PSF          The PSF which appears as the star in the field
+        @star_catalogue     The star catalogue containing X,Y positions and magnitudes.
+                            This could either a FITS format and .npy file.
+        @param ditherArray  Dither Array
+        @param exp_id       Takes one of 0,1,2,3,4 [default: 0]
+
+        @returns            A canvas image with the PSF images stitched.
+
+    """
+
+    ## Read in the star catalogue
+    if isinstance(star_catalogue,str):
+        path_star_catalogue = star_catalogue
+        try:
+            star_catalogue = fits.open(path_star_catalogue)
+            star_dat = star_catalogue[1].data
+        except:
+            star_dat = np.load(path_star_catalogue)
+
+    x_image = star_dat['X_IMAGE']
+    y_image = star_dat['Y_IMAGE']
+    star_mag = 17*np.ones_like(x_image) #star_dat['mag']
+    star_flux = 10.**(-0.4*(star_mag-magAB_zeropoint))
+
+    ## Set up an empty canvas
+    star_field = galsim.Image(canvas_bounds,init_value=0.)
+
+    for star_id in xrange(len(star_dat)):
+
+	## Compute the integer and fractional offsets
+	x_nominal = x_image[star_id] + 0.5 - ditherArray[exp_id,1]
+	y_nominal = y_image[star_id] + 0.5 - ditherArray[exp_id,2]
+	ix_nominal = int(math.floor(x_nominal+0.5))
+	iy_nominal = int(math.floor(y_nominal+0.5))
+	dx = x_nominal - ix_nominal
+	dy = y_nominal - iy_nominal
+
+	star_offset = galsim.PositionD(dx,dy) ## full offset
+
+        star = PSF.copy()
+        star = star.withFlux(star_flux[star_id])
+
+        stamp = star.drawImage(scale=pix_scale,offset=star_offset)
+
+        stamp.setCenter(ix_nominal, iy_nominal)
+
+        stitch_flag = stitch_stamps(star_field, stamp, min_pixel_value=-1e-2, max_flux=np.inf)
+
+    return star_field
+
+def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_id=0, rot_id=0, n_rotations=4, g1=0.0, g2=0.0, fixed_stamp_size=None):
     """ Obtain the postage stamps for a given list of indices.
 
         @param hst_indices          A list of row indices that need to be simulated from the input catalogue.
@@ -258,6 +267,44 @@ def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=
     ## Get the PSF
     PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id) ## 
     #PSF = getKiDSPSF(filter_name=filter_name) ## old
+
+    ## Get the galaxy parameters
+    ## Griffith parameters
+    obj_no = galaxy_dat.field('OBJNO').astype(int) ## OBJNO
+    n = galaxy_dat.field('N_GALFIT_HI').astype(float)  ## Sersic index n
+    hlr = galaxy_dat.field('RE_GALFIT_HI').astype(float)  ## half-light radius / effective radius
+    q = galaxy_dat.field('BA_GALFIT_HI')  ## axis ratio
+    beta = galaxy_dat.field('PA_GALFIT_HI') ## position angle
+
+    ## Matching parameters - used for cuts
+    rank = galaxy_dat.field('rank') ## matching rank
+    ## Other fields that might be used for the cuts
+    weight = galaxy_dat.field('weight') ## lensfit weights
+
+    try:
+        MASK_all = galaxy_dat.MASK
+        mask = ~(np.array(MASK_all&0xfc3c,dtype=bool))
+    except:
+        mask = np.zeros(galaxy_dat.shape[0],dtype=bool)
+        logger.warning("Input catalogue does not have inbuilt masks")
+
+    ## Positions (Theli astrometry when available, else use the Griffith ones)
+    RA = galaxy_dat.field('RA_THELI').copy() ## RA
+    DEC = galaxy_dat.field('DEC_THELI').copy() ## DEC
+    RA[rank==0], DEC[rank==0] = galaxy_dat.field('RA')[rank==0], galaxy_dat.field('DEC')[rank==0]
+
+    ## Use Theli magnitudes when available. Else, use MAGR
+    mag = galaxy_dat.field('MAG_AUTO_THELI').copy()
+    mag[rank==0] = galaxy_dat.field('MAGR')[rank==0]
+
+    ## Avoid exponentiating magnitudes directly to minimize overflow/numerical errors
+    #F0 =  gain*exp_time*(10**(0.4*magAB_zeropoint)) ## for FLUX_GAAP
+
+    ## Flux is zero by default!, except for those with positive magnitudes (many)
+    flux = np.zeros_like(mag,dtype=float)
+    ##flux[mag>0] = 10**(-0.4*(mag[mag>0])-magAB_zeropoint)
+    flux[mag>0] = 10**(-0.4*(mag[mag>0]-magAB_zeropoint))
+    #assert flux[rank!=0]==galaxy_dat.field('FLUX_AUTO_THELI')[rank!=0]
 
 #    for mag_id in xrange(len(mag)):
 #      #try:
@@ -282,8 +329,9 @@ def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=
 
     ## Beginning the loop over galaxies
     for hst_idx in hst_indices:
+        t_p1 = time.time()
         if n_count%n_reset==0:
-          t1 = time.time()
+            t1 = time.time()
 
 	failure = 0
         """ FAILURE FLAG BITS:
@@ -374,10 +422,12 @@ def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=
             try:
                 t_g1 = time.time()
                 draw_method = 'phot' if include_shot_noise else 'auto' ## potentially a flux-based choice. Keep it here.
-                stamp = gal_conv.drawImage(wcs=wcs.local(gal_imgpos),offset=gal_offset, method=draw_method)
-                stamp_size = max(stamp.array.shape) ## in case, if stamp is rectangular
+                #stamp = gal_conv.drawImage(wcs=wcs.local(gal_imgpos),offset=gal_offset, method=draw_method)
+                stamp = gal_conv.drawImage(scale=pix_scale, offset=gal_offset, method=draw_method)
                 t_g2 = time.time()
                 t_g = t_g2 - t_g1 ## time to draw the galaxy
+
+                stamp_size = max(stamp.array.shape) ## in case, if stamp is rectangular
                 #with open("drawImage_log.txt","a") as f:
                 #    f.write("{0} {1}\n".format(hst_idx,t_g))
             ## let it choose a size automatically
@@ -416,13 +466,6 @@ def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=
         else:
             stitch_flag = 0
 
-        ## Create a stamp record
-        stamp_record = (gal_id, gal_n, gal_hlr, gal_q, gal_beta, gal_flux,
-                        x_nominal, y_nominal, stamp_size, flux_fraction, t_g, failure, stitch_flag)
-
-        ## Appending it to the list of stamp records
-        stamp_record_list.append( stamp_record )
-
         ## Append the count, if the galaxy was attempted to be drawn
         if failure&(0x10) | (not failure):
             n_count += 1 ## increment n_count to account for the time taken to attempt drawing the galaxy
@@ -432,6 +475,16 @@ def getPostageStamps(hst_indices, ditherArray, psfset_id=None, exp_id=0, rot_id=
             postage_stamp_filename = postage_stamps_dir+'{1}.fits'.format(filter_name,gal_id)
             ## It should be stored with gal_id/obj_no since the association might change with another catalogue matching
             stamp.write(postage_stamp_filename,overwrite=False)
+
+        t_p2 = time.time()
+        t_p = t_p2-t_p1 ## Time to process the galaxy
+
+        ## Create a stamp record
+        stamp_record = (gal_id, gal_n, gal_hlr, gal_q, gal_beta, gal_flux,
+                        x_nominal, y_nominal, stamp_size, flux_fraction, t_g, t_p, failure, stitch_flag)
+
+        ## Appending it to the list of stamp records
+        stamp_record_list.append( stamp_record )
 
         if n_count%n_reset==0:
             t2 = time.time()
@@ -453,18 +506,29 @@ def workHorse(input_queue, output_queue):
     results = getPostageStamps(indices, **kwargs)
     output_queue.put(results)
 
-def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=None, cuts=default_cuts, parallelize=False):
+def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=None, star_catalogue=None, galaxy_dat=None, cuts=None, parallelize=0):
     ## It is good to log the beginning time and some important input parameters
     logger.info("'imsim' called at: {0}".format(time.ctime()))
 
+    kwds = {'psfset_id':0, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, \
+            'ditherArray':ditherArray, 'g1':g1, 'g2':g2, 'fixed_stamp_size':None, 'galaxy_dat':galaxy_dat}
+
+    ### Generate a star field
+    if star_catalogue is not None:
+        PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id)
+        star_images = getStarImages(PSF=PSF,star_catalogue=star_catalogue,ditherArray=ditherArray)
+    else:
+        star_images = galsim.Image(canvas_bounds,init_value=0.)
+
     ## Get cuts on the catalogue. Only the galaxies that pass these cuts will be simulated
     ## Convert the cuts to row indices
-    indices = np.where(cuts)[0]
+    if cuts is None:
+        indices = np.arange(0,len(galaxy_dat),1).astype(int)
+    else:
+        indices = np.where(cuts)[0]
+
     logger.info("'imsim' simulating {0} galaxies.".format(len(indices)))
     print "'imsim' simulating {0} galaxies.".format(len(indices))
-
-    kwds = {'psfset_id':0, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, \
-            'ditherArray':ditherArray, 'g1':g1, 'g2':g2, 'fixed_stamp_size':None}
 
     if parallelize:
         import warnings
@@ -480,7 +544,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         t1 = time.time()
 
         ## Queue method
-        if 0:
+        if parallelize==1:
             task_queue = Queue()
             done_queue = Queue()
 
@@ -495,7 +559,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
             results = [done_queue.get() for proc_id in xrange(n_jobs)]
 
         ## apply_async
-        if 0:
+        if parallelize==2:
             p = Pool(processes=n_workers)
             results = [ ]
             def log_results(r):
@@ -511,7 +575,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
             # http://stackoverflow.com/questions/8533318/python-multiprocessing-pool-when-to-use-apply-apply-async-or-map
         
         ## map_async
-        if 1:
+        if parallelize==3:
             p = Pool(processes=n_workers)
             def workHorse(idx):
                 return getPostageStamps(hst_indices=idx, **kwds)
@@ -526,7 +590,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         sys.stdout.flush()
 
         ## Combine the canvas_images that each worker gives to obtain a full (noiseless) image
-        full_images = combine_canvas([canvas_image for canvas_image in canvas_images])
+        gal_images = combine_canvas([canvas_image for canvas_image in canvas_images])
 
         ## Make the list of stamp records into a single list
         stamp_records = []
@@ -534,10 +598,12 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
             stamp_records += stamp_record_list
 
     else: # if not parallelize
-        full_images, stamp_records = getPostageStamps(indices, **kwds)
+        gal_images, stamp_records = getPostageStamps(indices, **kwds)
 
     if save_stamps:
         logger.info("Individual postage stamps saved on the disk.")
+
+    full_images = combine_canvas([gal_images, star_images])
 
     ## Store the PSF image
     if dir_psf is not None:
@@ -551,8 +617,8 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
 
     ## Convert the stamp records to a NumPy record array
     stamp_record_array = np.rec.array(stamp_records, \
-                            formats='int64,float,float,float,float,float,float,float,int16,float32,float,int8,int8',\
-                            names='OBJNO,SERSIC_n,HLR,q,PA,FLUX_INPUT,IMAGE_X,IMAGE_Y,STAMP_SIZE,FLUX_FRACTION,DRAWTIME,FAILURE_FLAG,STITCH_FLAG')
+                            formats='int64,float,float,float,float,float,float,float,int16,float32,float,float,int8,int8',\
+                            names='OBJNO,SERSIC_n,HLR,q,PA,FLUX_INPUT,IMAGE_X,IMAGE_Y,STAMP_SIZE,FLUX_FRACTION,DRAWTIME,PROCTIME,FAILURE_FLAG,STITCH_FLAG')
         
     ## Save the stamp records in FITS format
     stamp_hdu = fits.BinTableHDU(data=stamp_record_array)
@@ -905,12 +971,21 @@ def combine_input_output_catalogue():
     ## Assume the catalogue has been created
     pass
 
-def dumpDithers(path_dither, n_exposures=5):
+def dumpDithers(path_dither=None, n_exposures=5):
+    """ Generates the standard KiDS dither pattern and dumps it into a file for the pipeline to read. No pointing errors are included.
+
+        @param path_dither      The path, if not None, where the 'ditherArray.txt' file needs to be stored. [default: None]
+        @param n_exposures      No. of exposures or (1+No.of dither offsets). [default: 5]
+
+        @returns                A n_exposures x 3 array, whose columns correspond to Exposure Id, X offset and Y offset.
+
+    """
     ditherArray = np.dot(np.reshape(np.arange(0,n_exposures,1).astype(int),(n_exposures,1)), np.reshape(np.array([1, -25/0.214, -85/0.214]),(1,3)))
-    fname = 'ditherArray.txt'
-    pathname = os.path.join(path_dither, fname)
-    comments = 'EXP_ID \t +Dither x \t +Dither y' 
-    np.savetxt(fname=path_dither, X=ditherArray, header=comments, fmt=['%d', '%4.3f', '%4.3f'])
+    if path_dither is not None:
+        fname = 'ditherArray.txt'
+        pathname = os.path.join(path_dither, fname)
+        comments = 'EXP_ID \t +Dither x \t +Dither y'
+        np.savetxt(fname=path_dither, X=ditherArray, header=comments, fmt=['%d', '%4.3f', '%4.3f'])
 
     return ditherArray
 
@@ -919,15 +994,39 @@ def dumpDithers(path_dither, n_exposures=5):
 #            path_to_psf_archive_folder, path_to_image_archive_folder,\
 #            configFile, ditherArray, tmpDir, noise_sigma_in):
     
-def create_imsims(psfSet,g1,g2,path_input_cat,path_dither,dir_psf,dir_exp,n_gal=True,stars=False,faint_gal=False,rot=True,n_rot=3):
+def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,dir_exp,n_gal=True,stars=False,faint_gal=False,
+                    rot=True,n_rot=3, n_exposures=5,parallelize=False,internal_parallelize=0):
+
     ## Create a dither pattern over the multiple exposures and save it
-    n_exposures = 5
     ditherArray =  dumpDithers(path_dither,n_exposures=n_exposures)
 
     n_rotations = 1+n_rot*rot
-    kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'dir_psf':dir_psf, 'ditherArray':ditherArray}
 
-    parallelize = True
+    ## Load the galaxy catalogue
+    galaxy_cat = fits.open(path_input_cat)
+
+    MASK_all = galaxy_cat[1].data.MASK
+    mask = ~(np.array(MASK_all&0xfc3c,dtype=bool))
+    rank = galaxy_cat[1].data['rank']
+    distance2d = galaxy_cat[1].data['distance2d']
+    weight = galaxy_cat[1].data['weight']
+    mag1 = galaxy_cat[1].data['MAG_AUTO_THELI']
+    size1 = galaxy_cat[1].data['FWHM_IMAGE_THELI'] # pix
+    mag0 = galaxy_cat[1].data['MAGR']
+    size0 = galaxy_cat[1].data['FLUX_RADIUS_HI']
+    default_cuts = (mask)&(rank>0)&(distance2d<1)&(weight>0)
+    #star_cuts = (~(mag1<24)&(size1<2.8)&(rank>0) |~((rank==0)&(mag0<24)&(size0<2.8)&(mag0>0)&(size0>0)))
+    handpicked_stars = galaxy_cat[1].data['handpicked_stars']
+    star_cuts = (mag0>0)&(~handpicked_stars)
+    cuts = default_cuts&star_cuts
+    cuts = cuts[np.cumsum(cuts)<2000]
+
+    galaxy_dat = galaxy_cat[1].data[cuts]
+
+    print "Input galaxy catalogue loaded ..."
+    kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'idir_psf':dir_psf,
+              'ditherArray':ditherArray,'parallelize':internal_parallelize,
+                'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat}
 
     if parallelize:
         n_workers = n_exposures*n_rotations

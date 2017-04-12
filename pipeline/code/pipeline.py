@@ -16,7 +16,7 @@ Contact         ianfc89@gmail.com
 '''
 Imports.
 '''
-
+#import pdb; pdb.set_trace()
 import numpy as np
 import math
 import pyfits
@@ -144,7 +144,7 @@ def ChipExposures(ditherArray):
         for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
             for nExp in range(0, int(parser.get('chipping', 'n_exposures'))):
                 # Load the nominal image.
-                image = loadData('%s%s/%02d.exp%d.fits' % (TMPDIR, parser.get('directories', 'exp_directory'), nRot, nExp))
+                image = loadData('%s%s/exp%d_rot%02d.fits' % (TMPDIR, parser.get('directories', 'exp_directory'), nExp, nRot+1))
     
                 chipImage(image,
                           int(parser.get('chipping', 'chips_x')),
@@ -791,6 +791,7 @@ if __name__ == '__main__':
 
     # Check if rotations are on.
     rot_on = int(parser.get('imsim', 'rot'))
+    n_rot = int(parser.get('imsim', 'n_rot'))
 
     print '  Running Range of g1 = %s' % g1Range
     print '  Running Range of g2 = %s' % g2Range
@@ -814,75 +815,42 @@ if __name__ == '__main__':
             g1g2ShearRange = RUNID.split('_')[0]
             g1g2ShearPSF = RUNID.split('_')[1]
 
-            # priorFilePrevious = '/users/ianfc/kids/priors4/prior_%s_%s' % (g1g2ShearRange, g1g2ShearPSF)
-            # priorFilePrevious = '/users/ianfc/priors/bright_small_gals_prior_psf2'
-            # Call priors code to generate a set of priors.
-
-            # print '      Generating Priors',
-            # startTime = time.time()
-            # imsimpriors.create_priorfile(psfSet,
-            # parser.get('priors', 'besancon_path'),
-            # '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
-            # parser.get('priors', 'psfset_path'),
-            # grid_positions=False,
-            # nr_of_stars=True,
-            # nr_of_bright_gals=True,
-            # nr_of_faint_gals=True,
-            # random_seed=None
-            # )
-
-            # rewrite_prior.rewrite_old_prior(priorFilePrevious,'%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
-            # shutil.copyfile(priorFilePrevious, '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
-            # cut_priorfile_on_area(priorFilePrevious, '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
-            # print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
-
-            # Generate the input catalogue for Lensfit from the priors file.
-            '''
-            print '      Generating Lensfit Input File'
-            createFitsTable('%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
-                            '%s/%s.fits' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
-
-            createLensFITCatalogXYSKY('%s/%s.fits' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
-                                      '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog')),
-                                      '%s/%s.match.asci' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
-
-            '''
-
             # Flush the stdoutput
             sys.stdout.flush()
 
-            # Call the image generator code. Generates 10 images,
-            # 5 at nominal position and 5 at 90deg rotatation.
+            # Call the image generator code.
             print '      Rendering Images',
             startTime = time.time()
-            '''
-            imsim.create_imsims(g1g2[0], g1g2[1],
-                                int(parser.get('imsim', 'n_threads')),
-                                '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
-                                '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
-                                'REMOVE THIS PARAMATER',
-                                parser, ditherArray, TMPDIR, noise_sigma)
-            '''
             imsim.create_imsims(psfSet, g1g2[0], g1g2[1],
-                                '%s/%s' % (ARCHDIR, 'input.cat'),
+                                '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars.cat', None,
                                 '%s/%s' % (ARCHDIR, 'ditherArray.txt'),
                                 '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
                                 '%s%s/' % (TMPDIR, parser.get('directories', 'exp_directory')),
                                 n_gal=True, stars=False, faint_gal=False,
-                                rot=rot_on)
+                                rot=rot_on, n_rot=n_rot)
 
             print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
+            # Flush the stdoutput
+            sys.stdout.flush()
+		
             # Extract the dither information
             ditherArray = extractDithers()
 
+            # Flush the stdoutput
+            sys.stdout.flush()
+
             # Chip the exposures
+            print '      Chipping Exposures',
+            startTime = time.time()
             ChipExposures(ditherArray)
+            print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
             # Flush the stdoutput
             sys.stdout.flush()
 
             # Convert the PSFs
+            print '      Converting PSFs'
             for exposure in xrange(0, int(parser.get('chipping', 'n_exposures'))):
                 convertPSF(exposure)
 
@@ -931,7 +899,7 @@ if __name__ == '__main__':
 
             if rot_on == 1:
                 for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                    AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (weight_recal_script))
+                    AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (nRot+1))
 
             # Compress the data into an archive
             compressArchive()
