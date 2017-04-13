@@ -610,7 +610,8 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         psf_size = 32
         psf_image = galsim.Image(psf_size, psf_size)
         PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id)
-        psf_image = PSF.drawImage(image=psf_image, scale=pix_scale)
+        PSF_lf = PSF.shift(0.5*pix_scale, 0.5*pix_scale)
+        psf_image = PSF_lf.drawImage(image=psf_image, scale=pix_scale)
         psf_filename = 'exp{0}.fits'.format(exp_id)
         psf_pathname = os.path.join(dir_psf,psf_filename)
         psf_image.write(psf_pathname)
@@ -1019,12 +1020,12 @@ def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,
     handpicked_stars = galaxy_cat[1].data['handpicked_stars']
     star_cuts = (mag0>0)&(~handpicked_stars)
     cuts = default_cuts&star_cuts
-    cuts = cuts[np.cumsum(cuts)<2000]
+    #cuts = cuts[np.cumsum(cuts)<2000]
 
     galaxy_dat = galaxy_cat[1].data[cuts]
 
     print "Input galaxy catalogue loaded ..."
-    kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'idir_psf':dir_psf,
+    kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'dir_psf':dir_psf,
               'ditherArray':ditherArray,'parallelize':internal_parallelize,
                 'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat}
 
