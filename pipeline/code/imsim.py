@@ -362,9 +362,9 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
         ## Get the structural parameters
         gal_id = obj_no[hst_idx]
         gal_n = n[hst_idx]
-        gal_hlr = hlr[hst_idx]*hst_cosmos_pixel_scale ## in arcsec
-        gal_flux = flux[hst_idx]
         gal_q = q[hst_idx]
+        gal_hlr = np.sqrt(gal_q)*hlr[hst_idx]*hst_cosmos_pixel_scale ## in arcsec
+        gal_flux = flux[hst_idx]
         if n_rotations==1:
             gal_beta = (90+beta[hst_idx])
         else:
