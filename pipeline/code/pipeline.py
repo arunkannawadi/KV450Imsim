@@ -561,14 +561,15 @@ Temp Directory Structure. The IMSIM Pipeline will create
 a set of directories and subdirectories in order to handle
 with the data creation. These will be removed once done.
 '''
-def createWorkFolder(g1, g2, psfSet):
+def createWorkFolder(g1, g2, psfSet, randomKey=None):
     print '      Creating Temp. Directories';sys.stdout.flush()
 
     # Load the Root Directory from the parser.
     rootDirectory = parser.get('directories','root_directory')
 
-    # Define a unique random key for a run.
-    randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
+    if randomKey is None:
+        # Define a unique random key for a run.
+        randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
 
     # Add shear information.
     g1Part = ''
@@ -588,7 +589,7 @@ def createWorkFolder(g1, g2, psfSet):
     runID = '%s%s_%s_%s' % (g1Part, g2Part, psfSet, randomKey)
 
     # Create the sub-directories.
-    TMPDIR = '%s%s/' % (rootDirectory, runID)
+    TMPDIR = '%s%s/%s/' % (rootDirectory, randomKey, runID)
     chipDir = '%s%s' % (TMPDIR, parser.get('directories','chip_directory'))
     headDir = '%s%s' % (TMPDIR, parser.get('directories','head_directory'))
     psfDir = '%s%s' % (TMPDIR, parser.get('directories','psf_directory'))
@@ -611,6 +612,25 @@ def createWorkFolder(g1, g2, psfSet):
         os.mkdir(chipDirRot)
 
     return TMPDIR, runID
+'''
+Create a folder to hold the data archive. This will also store the config files used for the run.
+'''
+def createRandomKeyFolder(randomKey):
+    # For the archive folder
+    randomKeyDirectory = '%s%s' % (parser.get('directories','archive_directory'), randomKey)
+    configDirectory = '%s/%s' % (randomKeyDirectory, 'config')
+    os.mkdir(randomKeyDirectory)
+    os.mkdir(configDirectory)
+
+    # Copy the config files
+    configPath = parser.get('sextractor','sex_config')
+    shutil.copy(configPath, configDirectory)
+
+    # For the temp folder
+    randomKeyDir = '%s%s' % (parser.get('directories','root_directory'), randomKey)
+    os.mkdir(randomKeyDir)
+
+    return randomKeyDirectory
 
 '''
 Create a folder in the data archive. This will only store
@@ -619,7 +639,8 @@ also be compressed to save space.
 '''
 def createArchiveFolder(runID):
     print '      Creating Archive Directory';sys.stdout.flush()
-    archiveDirectory = '%s%s' % (parser.get('directories','archive_directory'), runID)
+    randomKey = runID.split('_')[-1]
+    archiveDirectory = '%s%s/%s' % (parser.get('directories','archive_directory'), randomKey, runID)
     os.mkdir(archiveDirectory)
     return archiveDirectory
 
@@ -765,6 +786,15 @@ if __name__ == '__main__':
     parser = SafeConfigParser()
     parser.read(configPath)
 
+    # Define a unique random key for a run.
+    randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
+
+    # Create the randomKey directories
+    randomKeyDirectory = createRandomKeyFolder(randomKey)
+
+    # Copy the config.ini to the randomKeyDirectory
+    shutil.copy(configPath, '%s/%s' % (randomKeyDirectory,'config'))
+
     # Check if user specifices to remove the temporary directory.
     removeTemp = ast.literal_eval(options.rmtemp)
     print '  Removing TMP Files = %s' % removeTemp
@@ -806,7 +836,7 @@ if __name__ == '__main__':
             print '    Running for g1, g2 = %.4f \t %.4f [PSF Set : %d]' % (g1g2[0], g1g2[1], psfSet)
 
             # Create unique temp directory
-            TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet)
+            TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet, randomKey)
 
             # Create data archive entry.
             ARCHDIR = createArchiveFolder(RUNID)
