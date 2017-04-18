@@ -1,0 +1,5 @@
+dsvbksb.o: dsvbksb.c /usr/include/stdc-predef.h nrutil.h
+
+/usr/include/stdc-predef.h:
+
+nrutil.h:

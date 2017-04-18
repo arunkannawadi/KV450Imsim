@@ -1,0 +1,35 @@
+
+  ------------------------------------------------------------------------- 
+  IMSIM Pipeline Started 
+  Version 0.3.1
+  Current Version (Full Run, Sextractor + Stars + Faint Gals + 5 Fixed PSFs)
+  Started at : Thu Mar 23 19:00:26 2017 
+  Running on : eemmeer.strw.leidenuniv.nl
+  ------------------------------------------------------------------------- 
+  Loading Config from /disks/shear15/KiDS/ImSim/pipeline/config/config.ini
+  Removing TMP Files = False
+  Using RAM Disk = False
+  Running Range of g1 = [-0.04]
+  Running Range of g2 = [0.0]
+  Running PSF Sets    = [0]
+  Noise Sigma         = 17.030000
+    Running for g1, g2 = -0.0400 	 0.0000 [PSF Set : 0]
+      Creating Temp. Directories
+      Creating Archive Directory
+      Run ID = m400m000_0_JWPFSO1TV6
+      Generating Priors  [0:01:05.040289]
+      Extracting Dither Information
+      Rendering Images ** USING NO IMSIM REMORPH **       Magnitude Zeropoint = 31.160756 , Noise Sigma - 17.030000
+ [1:36:21.709909]
+      Creating LensFIT Input File
+      Running SWarp (isWeights : False)  [0:00:56.152865]
+      Running SWarp (isWeights : True)  [0:00:59.896120]
+      Running SEXtractor  [0:00:40.757537]
+      Creating LensFIT Catalog
+      Running LensFIT (isRotated : False, rotationNumber : 00)  [2:09:49.468598]
+      Compressing Archive
+
+  ------------------------------------------------------------------------- 
+  IMSIM Pipeline Completed in (13876.0303s) 
+  Finished at : Thu Mar 23 22:51:42 2017 
+  ------------------------------------------------------------------------- 
