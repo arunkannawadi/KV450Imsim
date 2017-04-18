@@ -245,7 +245,7 @@ def getStarImages(PSF,star_catalogue, ditherArray, exp_id=0):
 
     return star_field
 
-def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_id=0, rot_id=0, n_rotations=4, g1=0.0, g2=0.0, fixed_stamp_size=None):
+def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_id=0, rot_id=0, n_rotations=4, g1=0.0, g2=0.0, sersic_only=True, fixed_stamp_size=None):
     """ Obtain the postage stamps for a given list of indices.
 
         @param hst_indices          A list of row indices that need to be simulated from the input catalogue.
@@ -271,10 +271,29 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
     ## Get the galaxy parameters
     ## Griffith parameters
     obj_no = galaxy_dat.field('OBJNO').astype(int) ## OBJNO
+
     n = galaxy_dat.field('N_GALFIT_HI').astype(float)  ## Sersic index n
     hlr = galaxy_dat.field('RE_GALFIT_HI').astype(float)  ## half-light radius / effective radius
     q = galaxy_dat.field('BA_GALFIT_HI')  ## axis ratio
     beta = galaxy_dat.field('PA_GALFIT_HI') ## position angle
+
+    if sersic_only is False:
+        ## Ref: http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_25.2_training_sample_readme.txt
+
+        ## Get the generic parameters
+        use_bulgefit = galaxy_dat.field('use_bulgefit')
+        btt = galaxy_dat.field('fit_dvc_btt')
+
+        bulgefit = galaxy_dat.field('bulgefit')
+        ## Get the disk parameters
+        disk_hlr = bulgefit[:,1]
+        disk_q = bulgefit[:,3]
+        disk_beta = bulgefit[:,7] ## in radians
+
+        ## Get the bulge parameters
+        bulge_hlr = bulgefit[:,1+8]
+        bulge_q = bulgefit[:,3+8]
+        bulge_beta = bulgefit[:,7+8] ## in radians
 
     ## Matching parameters - used for cuts
     rank = galaxy_dat.field('rank') ## matching rank
@@ -345,6 +364,12 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
         Bit 7 (Sign-bit): rank==0, ie, not found in KiDS catalogue
         """
 
+        ## Get the galaxy ID
+        gal_id = obj_no[hst_idx]
+
+        ## Get the galaxy flux
+        gal_flux = flux[hst_idx]
+
         ## Get the galaxy position
 	gal_ra, gal_dec = RA[hst_idx]*galsim.degrees, DEC[hst_idx]*galsim.degrees
 	gal_skypos = galsim.CelestialCoord(gal_ra,gal_dec)
@@ -360,51 +385,98 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
 	gal_offset = galsim.PositionD(dx,dy) ## fractional offset
 
         ## Get the structural parameters
-        gal_id = obj_no[hst_idx]
-        gal_n = n[hst_idx]
-        gal_q = q[hst_idx]
-        gal_hlr = np.sqrt(gal_q)*hlr[hst_idx]*hst_cosmos_pixel_scale ## in arcsec
-        gal_flux = flux[hst_idx]
-        if n_rotations==1:
-            gal_beta = (90+beta[hst_idx])
-        else:
-            gal_beta = (90+beta[hst_idx]+rot_id*90./(n_rotations-1)) ## in degrees
-        ## Griffith PA are wrt y, so add a 90. It shouldn't matter for other catalogues if n_rotations>1
-        ## Rotate in uniform steps from 0 to 90
-        #gal_beta = (beta[hst_idx]+90)*galsim.degrees
+        if sersic_only is True or (sersic_only is False and use_bulgefit[hst_idx]<=0):
+            ## The order above matters, since use_bulgefit is undefined if sersic_only is True
 
+            gal_n = n[hst_idx]
+            gal_q = q[hst_idx]
+            gal_hlr = np.sqrt(gal_q)*hlr[hst_idx]*hst_cosmos_pixel_scale ## in arcsec
+            if n_rotations==1:
+                gal_beta = (90+beta[hst_idx])
+            else:
+                ## Rotate in uniform steps from 0 to 90
+                gal_beta = (90+beta[hst_idx]+rot_id*90./(n_rotations-1)) ## in degrees
+            ## Griffith PA are wrt y, so add a 90. It shouldn't matter for other catalogues if n_rotations>1
 
-	    #if fixed_stamp_size is None:
-	    #    stamp_size = int(math.ceil(5.0*gal_hlr/pix_scale)) ## in pixels
-	    #else:
-	    #    stamp_size = fixed_stamp_size
-	    #stamp = galsim.Image(stamp_size,stamp_size
+            ## See if the galaxy has sensible parameters and if not, dismiss them
+            if (gal_n<n_min) or (gal_n>n_max):
+              logger.error("Sersic n for {0} is out of range.".format(hst_idx),exc_info=0)
+              failure += 2**0
 
-        ## See if the galaxy has sensible parameters and if not, dismiss them
-	if (gal_n<n_min) or (gal_n>n_max):
-	  logger.error("Sersic n for {0} is out of range.".format(hst_idx),exc_info=0)
-	  failure += 2**0
-	  
-	if (gal_q<q_min) or (gal_q>q_max):
-	  logger.error("Axis ratio for {0} is out of range.".format(hst_idx),exc_info=0)
-	  failure += 2**1
+            if (gal_q<q_min) or (gal_q>q_max):
+              logger.error("Axis ratio for {0} is out of range.".format(hst_idx),exc_info=0)
+              failure += 2**1
 
-        ## Make the galaxy
-	if not failure:
+            ## Make the galaxy
+            if not failure:
+                try:
+                    round_gal = galsim.Sersic(n=gal_n,half_light_radius=gal_hlr,flux=gal_flux,trunc=trunc_factor*gal_hlr,gsparams=gsp)
+                except:
+                    logger.exception("While creating a Sersic profile for {0}, an exception occurred".format(hst_idx),exc_info=0)
+                    print "Exception occurred in creating the Sersic profile", hst_idx
+                    print gal_n, gal_hlr, gal_flux
+                    failure += 2**2
+
+            if not failure:
+                try:
+                    gal = round_gal.shear(q=gal_q,beta=gal_beta*galsim.degrees)
+                except:
+                    logger.exception("While incorporating the intrinsic shape for {0}, an exception occurred".format(hst_idx),exc_info=0)
+                    failure += 2**3
+
+        else: ## if sersic_only is False and use_bulgefit[hst_idx] is True
+            ## Assign so that stamp record can have these values
+            gal_n, gal_beta, gal_q, gal_hlr = -9, -99, -9, -9
+
+            ## Get the bulge component as DeVaucoulers
+            gal_bulge_q = bulge_q[hst_idx]
+            gal_bulge_hlr = np.sqrt(gal_bulge_q)*bulge_hlr[hst_idx]*hst_cosmos_pixel_scale #in arcsec
+            if n_rotations==1:
+                gal_bulge_beta = bulge_beta[hst_idx] ## in radians
+            else:
+                ## Rotate in uniform steps from 0 to pi/2
+                gal_bulge_beta = bulge_beta[hst_idx]+rot_id*0.5*np.pi/(n_rotations-1) ## in radians
             try:
-                round_gal = galsim.Sersic(n=gal_n,half_light_radius=gal_hlr,flux=gal_flux,trunc=trunc_factor*gal_hlr,gsparams=gsp)
+                round_bulge = galsim.DeVaucouleurs(half_light_radius=gal_bulge_hlr,trunc=trunc_factor*gal_bulge_hlr,gsparams=gsp)
             except:
-		logger.exception("While creating a Sersic profile for {0}, an exception occurred".format(hst_idx),exc_info=0)
-		print "Exception occurred in creating the Sersic profile", hst_idx
-		print gal_n, gal_hlr, gal_flux
-		failure += 2**2
+                logger.exception("While creating a DeVaucouleurs profile for {0}, an exception occured.".format(hst_idx),exc_info=0)
+                print gal_bulge_hlr
+                failure = failure | 0x04
 
-        if not failure:
+            if not failure:
+                try:
+                    bulge = round_bulge.shear(q=gal_bulge_q,beta=gal_bulge_beta*galsim.radians)
+                except:
+                    logger.exception("While incorporating the intrinsic shape to DeVaucouleurs for {0}, an exception occurred.".format(hst_idx),exc_info=0)
+                    failure = failure | 0x08
+
+            ## Get the disk component as Exponential
+            gal_disk_q = disk_q[hst_idx]
+            gal_disk_hlr = np.sqrt(gal_disk_q)*disk_hlr[hst_idx]*hst_cosmos_pixel_scale #in arcsec
+            if n_rotations==1:
+                gal_disk_beta = disk_beta[hst_idx] ## in radians
+            else:
+                ## Rotate in uniform steps from 0 to pi/2
+                gal_disk_beta = disk_beta[hst_idx]+rot_id*0.5*np.pi/(n_rotations-1) ## in radians
             try:
-                gal = round_gal.shear(q=gal_q,beta=gal_beta*galsim.degrees)
+                round_disk = galsim.Exponential(half_light_radius=gal_disk_hlr,gsparams=gsp)
             except:
-                logger.exception("While incorporating the intrinsic shape for {0}, an exception occurred".format(hst_idx),exc_info=0)
-                failure += 2**3
+                logger.exception("While creating an Exponential profile for {0}, an exception occurred.".format(hst_idx),exc_info=0)
+                print gal_disk_hlr
+                failure = failure | 0x04
+
+            if not failure:
+                try:
+                    disk = round_disk.shear(q=gal_disk_q,beta=gal_disk_beta*galsim.radians)
+                except:
+                    logger.exception("While incorporating the instrinsic shape to Exponential for {0}, an excetion occurred.".format(hst_idx),exc_info=0)
+                    failure = failure | 0x08
+
+            if not failure:
+                gal_btt = btt[hst_idx]
+                # Add the bulge and the disk to get the galaxy profile
+                gal = gal_flux*((gal_btt)*bulge+(1-gal_btt)*disk)
+
 
         if not failure:
             ## Apply the lensing shear to the galaxy
@@ -506,11 +578,11 @@ def workHorse(input_queue, output_queue):
     results = getPostageStamps(indices, **kwargs)
     output_queue.put(results)
 
-def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=None, star_catalogue=None, galaxy_dat=None, cuts=None, parallelize=0):
+def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=None, star_catalogue=None, galaxy_dat=None, sersic_only=True, cuts=None, parallelize=0):
     ## It is good to log the beginning time and some important input parameters
     logger.info("'imsim' called at: {0}".format(time.ctime()))
 
-    kwds = {'psfset_id':0, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, \
+    kwds = {'psfset_id':0, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, 'sersic_only':sersic_only, \
             'ditherArray':ditherArray, 'g1':g1, 'g2':g2, 'fixed_stamp_size':None, 'galaxy_dat':galaxy_dat}
 
     ### Generate a star field
@@ -529,6 +601,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
 
     logger.info("'imsim' simulating {0} galaxies.".format(len(indices)))
     print "'imsim' simulating {0} galaxies.".format(len(indices))
+    sys.stdout.flush()
 
     if parallelize:
         import warnings
@@ -996,7 +1069,7 @@ def dumpDithers(path_dither=None, n_exposures=5):
 #            configFile, ditherArray, tmpDir, noise_sigma_in):
     
 def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,dir_exp,n_gal=True,stars=False,faint_gal=False,
-                    rot=True,n_rot=3, n_exposures=5,parallelize=False,internal_parallelize=0):
+                    rot=True,n_rot=3, n_exposures=5,sersic_only=True,parallelize=True,internal_parallelize=0):
 
     ## Create a dither pattern over the multiple exposures and save it
     ditherArray =  dumpDithers(path_dither,n_exposures=n_exposures)
@@ -1026,7 +1099,7 @@ def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,
 
     print "Input galaxy catalogue loaded ..."
     kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'dir_psf':dir_psf,
-              'ditherArray':ditherArray,'parallelize':internal_parallelize,
+              'ditherArray':ditherArray,'parallelize':internal_parallelize, 'sersic_only':sersic_only,
                 'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat}
 
     if parallelize:

@@ -823,6 +823,14 @@ if __name__ == '__main__':
     rot_on = int(parser.get('imsim', 'rot'))
     n_rot = int(parser.get('imsim', 'n_rot'))
 
+    # Check if we are simulating B+D models along with Sersic
+    sersic_only = bool(parser.get('imsim', 'sersic_only'))
+    if sersic_only is True:
+        galCatPath = parser.get('imsim', 'sersic_catalogue')
+    else:
+        galCatPath = parser.get('imsim', 'BD_catalogue')
+
+    print '  Random key          = %s' %randomKey
     print '  Running Range of g1 = %s' % g1Range
     print '  Running Range of g2 = %s' % g2Range
     print '  Running PSF Sets    = %s' % psfRange
@@ -852,12 +860,12 @@ if __name__ == '__main__':
             print '      Rendering Images',
             startTime = time.time()
             imsim.create_imsims(psfSet, g1g2[0], g1g2[1],
-                                '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars.cat', None,
+                                galCatPath, None,
                                 '%s/%s' % (ARCHDIR, 'ditherArray.txt'),
                                 '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
                                 '%s%s/' % (TMPDIR, parser.get('directories', 'exp_directory')),
                                 n_gal=True, stars=False, faint_gal=False,
-                                rot=rot_on, n_rot=n_rot)
+                                rot=rot_on, n_rot=n_rot, sersic_only=sersic_only)
 
             print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
