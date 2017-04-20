@@ -1069,12 +1069,10 @@ def dumpDithers(path_dither=None, n_exposures=5):
 #            configFile, ditherArray, tmpDir, noise_sigma_in):
     
 def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,dir_exp,n_gal=True,stars=False,faint_gal=False,
-                    rot=True,n_rot=3, n_exposures=5,sersic_only=True,parallelize=True,internal_parallelize=0):
+                    rot_id=0, n_rotations=4, n_exposures=5,sersic_only=True,parallelize=True,internal_parallelize=0):
 
     ## Create a dither pattern over the multiple exposures and save it
     ditherArray =  dumpDithers(path_dither,n_exposures=n_exposures)
-
-    n_rotations = 1+n_rot*rot
 
     ## Load the galaxy catalogue
     galaxy_cat = fits.open(path_input_cat)
@@ -1088,7 +1086,7 @@ def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,
     size1 = galaxy_cat[1].data['FWHM_IMAGE_THELI'] # pix
     mag0 = galaxy_cat[1].data['MAGR']
     size0 = galaxy_cat[1].data['FLUX_RADIUS_HI']
-    default_cuts = (mask)&(rank>0)&(distance2d<1)&(weight>0)
+    default_cuts = (mask)&(rank>=0)&(distance2d<1)&(weight>=0)
     #star_cuts = (~(mag1<24)&(size1<2.8)&(rank>0) |~((rank==0)&(mag0<24)&(size0<2.8)&(mag0>0)&(size0>0)))
     handpicked_stars = galaxy_cat[1].data['handpicked_stars']
     star_cuts = (mag0>0)&(~handpicked_stars)
@@ -1103,20 +1101,18 @@ def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,
                 'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat}
 
     if parallelize:
-        n_workers = n_exposures*n_rotations
+        n_workers = n_exposures
         p = Pool(processes=n_workers)
         procs = []
         for exp_id in xrange(n_exposures):
-            for rot_id in xrange(n_rotations):
-                proc = p.apply_async(func=imsim,args=(exp_id,rot_id),kwds=kwargs)
-                procs.append( proc )
+            proc = p.apply_async(func=imsim,args=(exp_id,rot_id),kwds=kwargs)
+            procs.append( proc )
         p.close()
         p.join()
 
     else: ## if not parallelize
         for exp_id in xrange(n_exposures):
-            for rot_id in xrange(n_rotations):
-                imsim(exp_id=exp_id,rot_id=rot_id,**kwargs)
+            imsim(exp_id=exp_id,rot_id=rot_id,**kwargs)
 
 
 def create_imsim(psfSet, g1, g2,\
