@@ -395,7 +395,7 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
                 gal_beta = (90+beta[hst_idx])
             else:
                 ## Rotate in uniform steps from 0 to 90
-                gal_beta = (90+beta[hst_idx]+rot_id*90./(n_rotations-1)) ## in degrees
+                gal_beta = (90+beta[hst_idx]+rot_id*45.) ## in degrees
             ## Griffith PA are wrt y, so add a 90. It shouldn't matter for other catalogues if n_rotations>1
 
             ## See if the galaxy has sensible parameters and if not, dismiss them
