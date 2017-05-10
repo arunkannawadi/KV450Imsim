@@ -32,12 +32,6 @@ include_shot_noise = False
 ## How many exposures do we simulate?
 n_tot_exposures = 5
 
-### How many rotations do we do to cancel shape noise?
-#n_rotations = 4
-
-#ditherArray = [galsim.PositionD(0.,0.), galsim.PositionD(5.3,-4.2), galsim.PositionD(-6.1,-4.9), galsim.PositionD(-3.6,5.2), galsim.PositionD(7.5,5.5)]
-#ditherArray = [galsim.PositionD(0.,0.), galsim.PositionD(25/0.214,85/0.214), galsim.PositionD(2*25/0.214,2*85/0.214), galsim.PositionD(3*25/0.214,3*85/0.214), galsim.PositionD(4*25/0.214,4*85/0.214)]
-
 ## Load the combined input catalogue
 input_cat_name = '/disks/shear14/arunkannawadi/catalogue_matching/KiDS_unmasked_Griffith_iMS1.cat'
 input_catalogue = fits.open(input_cat_name)
@@ -1154,14 +1148,18 @@ def create_imsim(psfSet, g1, g2,\
         subprocess.call(["cp", "/disks/shear14/arunkannawadi/imsim/ditherArray.txt", path_dither])
 
 def rng_generator(base_seed, **kwargs):
+    import cmath
     g1 = kwargs['g1']
     g2 = kwargs['g2']
     psfset_id = kwargs['psfset_id']
     exp_id = kwargs['exp_id']
     rot_id = kwargs['rot_id']
 
+    g = complex(g1,g2)
+    ## Phase of g takes [-3,-2,-1,0,1,2,3,4]*np.pi/4
+
     ## All 5x416 square degrees get different rng_seed, so that the noise realisations don't repeat irrespective of parallelization
-    rng_seed = base_seed + int(np.arctan(g2/g1)*4*2/np.pi) + 1000*psfset_id + 10*exp_id + 100*rot_id
+    rng_seed = base_seed + int(3+cmath.phase(g)*4/np.pi) + 1000*psfset_id + 10*exp_id + 100*rot_id
     return rng_seed
     
 
