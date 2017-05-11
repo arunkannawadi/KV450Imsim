@@ -763,8 +763,8 @@ def chopImage(canvas_image, output_filename=None):
 
     old_bounds = canvas_image.bounds
     center = old_bounds.center()
-    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2
-    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2
+    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2 -1 #n(pix) = xmax-xmin+1
+    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2 -1 #n(pix) = ymax-ymin+1
 
     new_bounds = galsim.BoundsI(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 
