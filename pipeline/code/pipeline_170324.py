@@ -837,7 +837,7 @@ if __name__ == '__main__':
                                          parser.get('priors', 'psfset_path'),
                                          grid_positions=False,
                                          nr_of_stars=False,
-                                         nr_of_bright_gals=50,
+                                         nr_of_bright_gals=True,
                                          nr_of_faint_gals=False,
                                          random_seed=None
                                          )
