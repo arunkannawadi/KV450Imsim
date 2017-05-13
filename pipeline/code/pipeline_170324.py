@@ -709,6 +709,16 @@ def AsciiToFits(catalogue_name):
 
 	tbhdu.writeto('%s/%s.fits' % (ARCHDIR, catalogue_name), overwrite=True)
 
+def fetch_random_seed(RUNID):
+        prefix = RUNID.rpartition('_')[0]
+        parent_directory = '/disks/shear12/herbonnet/kids/data/vault_03052016_newmagdistr/'
+        subdirectory = [subdir for subdir in os.listdir(parent_directory) if prefix in subdir and not '.tar.gz' in subdir][0]
+
+        ## The following functionality is available within imsimpriors as well, so might as well return the full path of the subdirectory
+        with open(os.path.join(parent_directory,subdirectory,'prior'),'r') as f:
+            line = f.readline()
+        random_seed = line.split()[-1]
+        return long(random_seed)
 
 """
 Main Method.
@@ -826,6 +836,8 @@ if __name__ == '__main__':
             g1g2ShearRange = RUNID.split('_')[0]
             g1g2ShearPSF = RUNID.split('_')[1]
 
+            random_seed = fetch_random_seed(RUNID)
+
             # priorFilePrevious = '/users/ianfc/kids/priors4/prior_%s_%s' % (g1g2ShearRange, g1g2ShearPSF)
             # priorFilePrevious = '/users/ianfc/priors/bright_small_gals_prior_psf2'
             # Call priors code to generate a set of priors.
@@ -839,7 +851,7 @@ if __name__ == '__main__':
                                          nr_of_stars=False,
                                          nr_of_bright_gals=True,
                                          nr_of_faint_gals=False,
-                                         random_seed=None
+                                         random_seed=random_seed
                                          )
             # rewrite_prior.rewrite_old_prior(priorFilePrevious,'%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
             # shutil.copyfile(priorFilePrevious, '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
