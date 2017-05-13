@@ -10,7 +10,7 @@ import time
 #import shutil
 import subprocess
 from multiprocessing import Process, Queue, current_process, cpu_count
-import pipeline
+import pipeline_170324 as pipeline
 import optparse
 if os.path.isdir('/net/meije/data1/simulations/GalSim/'):
 	sys.path.insert(0,'../../GalSim/')

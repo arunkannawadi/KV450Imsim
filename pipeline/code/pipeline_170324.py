@@ -29,9 +29,9 @@ import os
 import string
 import random
 import optparse
-import priors_fixed_psf2 as imsimpriors
+import priors_fixed_psf2_170324 as imsimpriors
 # import rewrite_prior
-import imsim as imsim
+import imsim_170324 as imsim
 import time
 import sys
 import shutil
@@ -518,6 +518,35 @@ def sextractorPositions(chip_rot_name='chip', rot_number='00'):
     shutil.copy(catalogPath, catalogPathArchive)
     print ' [%s]' % (str(datetime.timedelta(seconds=(time.time()-startTime))))
 
+def createRandomKeyFolder(randomKey):
+    # For the archive folder
+    randomKeyDirectory = '%s%s' % (parser.get('directories','archive_directory'), randomKey)
+    configDirectory = '%s/%s' % (randomKeyDirectory, '.misc')
+    try:
+        os.mkdir(randomKeyDirectory)
+        os.mkdir(configDirectory)
+    except OSError:
+        print "This random key already exists."
+
+    # Copy the config files
+    configPath = parser.get('sextractor','sex_config')
+    shutil.copy(configPath, configDirectory)
+
+    # Copy the source code for reference
+    pipeline_abspath = os.path.abspath(__file__) ## get self absolute path
+    shutil.copy(pipeline_abspath, configDirectory) ## save itself first
+    imsim_abspath = pipeline_abspath.replace(__file__, imsim.__file__)
+    shutil.copy(imsim_abspath, configDirectory) ## save the image simulation code as well
+
+    # For the temp folder
+    randomKeyDir = '%s%s' % (parser.get('directories','root_directory'), randomKey)
+    try:
+        os.mkdir(randomKeyDir)
+    except OSError:
+        print "This random key already exists."
+
+    return randomKeyDirectory
+
 '''
 Temp Directory Structure. The IMSIM Pipeline will create
 a set of directories and subdirectories in order to handle
@@ -528,9 +557,6 @@ def createWorkFolder(g1, g2, psfSet):
 
     # Load the Root Directory from the parser.
     rootDirectory = parser.get('directories','root_directory')
-
-    # Define a unique random key for a run.
-    randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
 
     # Add shear information.
     g1Part = ''
@@ -550,25 +576,31 @@ def createWorkFolder(g1, g2, psfSet):
     runID = '%s%s_%s_%s' % (g1Part, g2Part, psfSet, randomKey)
 
     # Create the sub-directories.
-    TMPDIR = '%s%s/' % (rootDirectory, runID)
+    TMPDIR = '%s%s/%s/' % (rootDirectory, randomKey, runID)
     chipDir = '%s%s' % (TMPDIR, parser.get('directories','chip_directory'))
     headDir = '%s%s' % (TMPDIR, parser.get('directories','head_directory'))
     psfDir = '%s%s' % (TMPDIR, parser.get('directories','psf_directory'))
     weightsDir = '%s%s' % (TMPDIR, parser.get('directories','weight_directory'))
     galsimPSFDir = '%s%s' % (TMPDIR, parser.get('directories','galsim_psf_directory'))
 
-    os.mkdir(TMPDIR)
-    os.mkdir(chipDir)
-    os.mkdir(headDir)
-    os.mkdir(psfDir)
-    os.mkdir(weightsDir)
-    os.mkdir(galsimPSFDir)
+    try:
+        os.mkdir(TMPDIR)
+        os.mkdir(chipDir)
+        os.mkdir(headDir)
+        os.mkdir(psfDir)
+        os.mkdir(weightsDir)
+        os.mkdir(galsimPSFDir)
+    except:
+        print "Temp directories already exist."
 
     # Make the rotated folders.
     nRot = int(parser.get('imsim','n_rot'))
     for ii in range(0, nRot):
         chipDirRot = '%s%s%02d' % (TMPDIR, parser.get('directories','chiprot_directory'), ii+1)
-        os.mkdir(chipDirRot)
+        try:
+            os.mkdir(chipDirRot)
+        except:
+            print "%s already exists." %(chipDirRot)
 
     return TMPDIR, runID
 
@@ -579,8 +611,11 @@ also be compressed to save space.
 '''
 def createArchiveFolder(runID):
     print '      Creating Archive Directory';sys.stdout.flush()
-    archiveDirectory = '%s%s' % (parser.get('directories','archive_directory'), runID)
-    os.mkdir(archiveDirectory)
+    archiveDirectory = '%s%s/%s' % (parser.get('directories','archive_directory'), randomKey, runID)
+    try:
+        os.mkdir(archiveDirectory)
+    except:
+        print "The archive directory already exists."
     return archiveDirectory
 
 '''
@@ -717,6 +752,9 @@ if __name__ == '__main__':
     argopts.add_option("-p", "--psfrange", dest="psfrange",
                        default="0,1,2,3,4",
                        help="Specify the range of PSF runs")
+    argopts.add_option("-k", "--randomKey", dest="randomKey",
+                        default="testing",
+                        help="Specify the Job ID through a randomKey")
 
     (options, args) = argopts.parse_args()
     configPath = options.config
@@ -725,6 +763,22 @@ if __name__ == '__main__':
     print '  Loading Config from %s' % configPath
     parser = SafeConfigParser()
     parser.read(configPath)
+
+    # Define a unique random key for a run.
+    global randomKey
+    randomKey = options.randomKey
+
+    ## RandomKey must not contain an underscore, otherwise, only a part will be extracted in later operations.
+    if '_' in randomKey:
+        print "The value for random key contained an underscore. Removing it."
+        randomKey = randomKey.replace('_','')
+        print "Updated random key is", randomKey
+
+    # Create the randomKey directories
+    randomKeyDirectory = createRandomKeyFolder(randomKey)
+
+    # Copy the config.ini to the randomKeyDirectory
+    shutil.copy(configPath, '%s/%s' % (randomKeyDirectory,'.misc'))
 
     # Check if user specifices to remove the temporary directory.
     removeTemp = ast.literal_eval(options.rmtemp)
@@ -750,6 +804,7 @@ if __name__ == '__main__':
     psfRange = options.psfrange.split(',')
     psfRange = [int(i) for i in psfRange]
 
+    print '  Random key          = %s' %randomKey
     print '  Running Range of g1 = %s' % g1Range
     print '  Running Range of g2 = %s' % g2Range
     print '  Running PSF Sets    = %s' % psfRange
