@@ -190,9 +190,10 @@ def create_imsims(g1,g2,nproc,
             for line in fileobject:
                 if line[0]=='#': continue
                 k+=1
-                (x,y,gal_mag,gal_size,
-                gal_e1,gal_e2,gal_bt,gal_n,gal_ZB,gal_ID) = [float(lineobject) for lineobject in line.split()]
-
+                try:
+                    (x,y,gal_mag,gal_size, gal_e1,gal_e2,gal_bt,gal_n,gal_ZB,gal_ID) = [float(lineobject) for lineobject in line.split()]
+                except:
+                    (x,y,gal_mag,gal_size, gal_e1,gal_e2,gal_bt,gal_n,gal_ZB) = [float(lineobject) for lineobject in line.split()]
                 #print k, x, y
 
                 # Apply the dither + pointing error from prior file
