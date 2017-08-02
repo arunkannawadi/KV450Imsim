@@ -512,8 +512,9 @@ def swarpChips(isWeights=False, chip_rot_name='chip', rot_number=0):
         swarpWeightPath = '%s%s/%s.weight' % (TMPDIR, chip_rot_name, parser.get('swarp','chips_save'))
 
     swarpRun = '%s %s -c %s -IMAGEOUT_NAME %s -WEIGHTOUT_NAME %s' % (processPath, imagePath, paramPath, savePath, swarpWeightPath)
-    #print ''
-    #print swarpRun
+    print 'The swarp command is '
+    print swarpRun
+
     process = Popen(swarpRun, stdout=PIPE, stderr=PIPE, shell=True, cwd=workingDirectory)
     stdout, stderr = process.communicate()
     print ' [%s]' % (str(datetime.timedelta(seconds=(time.time()-startTime))))
@@ -860,6 +861,9 @@ if __name__ == '__main__':
     argopts.add_option("-k", "--randomKey", dest="randomKey",
                         default="testing",
                         help="Specify the Job ID through a randomKey")
+    argopts.add_option("-s", "--skipblock", dest="skipblock",
+                        default="-1",
+                        help="Specify the blocks you want to skip.")
 
     (options, args) = argopts.parse_args()
     configPath = options.config
@@ -905,6 +909,10 @@ if __name__ == '__main__':
     # Get the PSF Range.
     psfRange = options.psfrange.split(',')
     psfRange = [int(i) for i in psfRange]
+
+    # Get the skipblocks
+    skipBlock = options.skipblock.split(',')
+    skipBlock = [int(i) for i in skipBlock]
 
     print '  Random key          = %s' %randomKey
     print '  Running Range of g1 = %s' % g1Range
@@ -976,7 +984,7 @@ if __name__ == '__main__':
 #            input_prior = input_prior_list[0]
 ## AKJ: Turn off creating priorfile to force a comparison
 
-            if True: ## Functional block 1 -  Generate the prior file
+            if not 1 in skipBlock: ## Functional block 1 -  Generate the prior file
                 imsimpriors.create_priorfile(psfSet,
                                              parser.get('priors', 'besancon_path'),
                                              '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
@@ -1018,10 +1026,10 @@ if __name__ == '__main__':
                 # Flush the stdoutput
                 sys.stdout.flush()
 
-                # Extract the dither information
-                ditherArray = extractDithers()
+            # Extract the dither information
+            ditherArray = extractDithers()
 
-            if True: ## Functional block 2 - Generate the images
+            if not 2 in skipBlock: ## Functional block 2 - Generate the images
                 # Call the image generator code. Generates 10 images,
                 # 5 at nominal position and 5 at 90deg rotatation.
                 print '      Rendering Images ** USING NO IMSIM REMORPH **',
@@ -1051,7 +1059,7 @@ if __name__ == '__main__':
                 catalogue directly from the truth priors catalogue.
                 '''
 
-            if True: ## Functional block 3 - Run SWarp & SExtractor
+            if not 3 in skipBlock: ## Functional block 3 - Run SWarp & SExtractor
                 # Swarp Chips/#Weights
                 swarpChips(isWeights=True)
                 if sexonrot==0:
@@ -1075,7 +1083,7 @@ if __name__ == '__main__':
                     createLensFITCatalog(0)
 
             ## If it passed all the 3 functional blocks, run lensfit
-            if True: ## Functional block 4 - Run lensfit
+            if not 4 in skipBlock: ## Functional block 4 - Run lensfit
 
                 # Run LensFIT for Nominal and Rotated Images
                 flensfit(isRotated=False, rotationNumber=0)
