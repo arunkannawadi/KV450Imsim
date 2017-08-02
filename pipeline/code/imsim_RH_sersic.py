@@ -40,18 +40,22 @@ def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
     # Convert Lensfit scale radius to GalSim azimuthally averaged half light radius
     gal_e = numpy.sqrt(gal_e1**2+gal_e2**2)
 #    gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
-    gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))*5./3         # arcsec
 #    gal_size = gal_size*numpy.sqrt(numpy.sqrt((1.-gal_e)/(1.+gal_e)))
 
     # Create galaxy profile
     if gal_bt==9:
+        #gal_size = gal_size*numpy.sqrt((1.-gal_e)/(1.+gal_e))
+        ### *** HACK ALERT!!! ***
+        gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))*5./3         # arcsec
         gal = galsim.Sersic(flux=1., n=gal_n, half_light_radius=gal_size,
                             trunc=4.5*gal_size,flux_untruncated=False)
     elif gal_bt==1:
         #gal = galsim.DeVaucouleurs(flux=1., half_light_radius=gal_size)
+        gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
         gal = galsim.Sersic(flux=1., n=4, half_light_radius=gal_size, 
                             trunc=4.5*gal_size,flux_untruncated=False)
     else:
+        gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
         #bulge = galsim.DeVaucouleurs(flux=gal_bt, half_light_radius=gal_size)
         #disk = galsim.Exponential(flux=1.-gal_bt, scale_radius=gal_size)
 #################################################################################################################
