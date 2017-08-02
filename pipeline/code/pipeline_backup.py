@@ -925,8 +925,10 @@ if __name__ == '__main__':
     if realistic:
         randomize_positions = bool(int(parser.get('priors', 'randomize_positions')))
         randomize_orientations = bool(int(parser.get('priors', 'randomize_orientations')))
+        scramble_mod_e = bool(int(parser.get('priors','scramble_mod_e')))
     else:
         randomize_positions, randomize_orientations = True, True ## does not matter
+        scramble_mod_e = False ## does not matter
 
     print '  Realistic priors? :     ', realistic
     print '  Randomizing positions? :   ', randomize_positions
@@ -996,13 +998,14 @@ if __name__ == '__main__':
                                              random_seed=random_seed,
                                              randomize_positions=randomize_positions,
                                              randomize_orientations=randomize_orientations,
-                                             realistic=realistic
+                                             scramble_mod_e=scramble_mod_e,
+                                             realistic=realistic, include_pointing_error=True
                                              )
                 if not realistic:
                     ## Append a dummy column, since the Sersic n column will be missing, which the imsim routine expects
                     append_n_column('%s/%s' %(ARCHDIR, parser.get('priors', 'prior_catalog')))
 
-                if realistic & sersic_only:
+                if (realistic==0) & (sersic_only==1):
                     ## Randomly plug in Sersic N values and set B/T == 9
                     make_it_sersic('%s/%s' %(ARCHDIR, parser.get('priors', 'prior_catalog')))
 
