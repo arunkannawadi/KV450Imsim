@@ -218,10 +218,16 @@ def setHeader(ditherValue, chipID, imageDimensions, xIndex, yIndex, chipDimX, ch
     fitsHeader.set('CTYPE1', 'RA---TAN')
     fitsHeader.set('CTYPE2', 'DEC--TAN')
 
-    fitsHeader.update('EXPTIME', 360)
-    fitsHeader.update('PHOTPLAM', 0.000000)
-    fitsHeader.update('PHOTZPT', 0.000000)
-    fitsHeader.update('PHOTFLAM', 0.000000)
+    try: ## THIS WAS THE ORIGINAL CODE THAT STOPPED WORKING ON JULY 22, 2017
+        fitsHeader.update('EXPTIME', 360)
+        fitsHeader.update('PHOTPLAM', 0.000000)
+        fitsHeader.update('PHOTZPT', 0.000000)
+        fitsHeader.update('PHOTFLAM', 0.000000)
+    except ValueError: ## set the same instead of update, by AKJ
+        fitsHeader.set('EXPTIME', 360)
+        fitsHeader.set('PHOTPLAM', 0.000000)
+        fitsHeader.set('PHOTZPT', 0.000000)
+        fitsHeader.set('PHOTFLAM', 0.000000)
 
     fitsHeader.set('RADECSYS', 'FK5     ')
 
@@ -281,8 +287,12 @@ def setHeader(ditherValue, chipID, imageDimensions, xIndex, yIndex, chipDimX, ch
     fitsHeader.set('PV2_9', 0.0000000000000)
     fitsHeader.set('PV2_10', 0.0000000000000)
 
-    fitsHeader.update('CUNIT1', 'deg     ')
-    fitsHeader.update('CUNIT2', 'deg     ')
+    try:
+        fitsHeader.update('CUNIT1', 'deg     ')
+        fitsHeader.update('CUNIT2', 'deg     ')
+    except ValueError:
+        fitsHeader.set('CUNIT1', 'deg     ')
+        fitsHeader.set('CUNIT2', 'deg     ')
 
     fitsHDU.close()
 
@@ -298,7 +308,9 @@ in the Astrometry.
 def lensfitHeader(path, chipHeader):
     f = open(path, 'w')
     for line in chipHeader.cards:
-        f.write(line.cardimage + "\n")
+        ## line has cardimage attribute until JULY 22, 2017
+        #f.write(line.cardimage + "\n")
+        f.write(line.image + "\n") ## change by AKJ
     f.close()
 
 '''
