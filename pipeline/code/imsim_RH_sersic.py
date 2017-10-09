@@ -120,7 +120,7 @@ def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
 def create_imsims(g1,g2,nproc,
             path_to_prior_file,
             path_to_psf_archive_folder,
-            path_to_image_archive_folder, configFile, ditherArray, tmpDir, noise_sigma_in):
+            path_to_image_archive_folder, configFile, ditherArray, tmpDir, noise_sigma_in, randomKey):
 
     #---------------------------- Set up parameters for simulations --------------------------------
 
@@ -211,8 +211,9 @@ def create_imsims(g1,g2,nproc,
                         try: # AKJ
                             stamp,stamp2,stamp3,stamp4 = create_gal_stamp(x,y,
                                                                 gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
-                                                                g1,g2,psf,pixel_scale,mag_zero,gal_n)
+                                                                g1,g2,psf,pixel_scale,mag_zero,gal_n,gal_ID)
                         except: #AKJ
+                            print " Failed creating postage stamp for ", gal_ID, ".It is a faint galaxy and had B/T = ", gal_bt
                             continue
 
                         duplicate_stamps.append(stamp)
@@ -273,8 +274,9 @@ def create_imsims(g1,g2,nproc,
                         try: #AKJ
                             stamp,stamp2,stamp3,stamp4 = create_gal_stamp(x,y,
                                                                 gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
-                                                                    g1,g2,psf,pixel_scale,mag_zero,gal_n)
+                                                                    g1,g2,psf,pixel_scale,mag_zero,gal_n,gal_ID)
                         except: #AKJ
+                            print " Failed creating postage stamp for ", gal_ID, ".It is a bright galaxy and had B/T = ", gal_bt
                             continue
 
                         # Save every object from the duplication magnitude limit onwards
