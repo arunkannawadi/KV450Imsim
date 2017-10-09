@@ -6,6 +6,7 @@ Changes from imsim_RH.py:
     0 <= gal_bt <= 1 for B+D galaxies
     gal_bt == -1 for stars
     gal_bt == 9 for Sersic galaxies
+    gal_bt == 5 for real galaxies
 """
 import sys
 import os
@@ -18,10 +19,18 @@ import subprocess
 from multiprocessing import Process, Queue, current_process, cpu_count
 import pipeline_backup as pipeline
 import optparse
-if os.path.isdir('/net/meije/data1/simulations/GalSim/'):
-	sys.path.insert(0,'../../GalSim/')
+#if os.path.isdir('/net/meije/data1/simulations/GalSim/'):
+#	sys.path.insert(0,'../../GalSim/')
 import galsim
+from astropy.io import fits
 import pyfits
+
+#---------------------------------For real COSMOS galaxies-----------------------------------------
+id_map_filename = '/disks/shear15/KiDS/ImSim/pipeline/data/id_map_bd'
+id_map_array = numpy.loadtxt(id_map_filename)
+id_map = dict(zip(id_map_array[:,0],id_map_array[:,1]))
+rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_25.2.fits',dir='/disks/shear15/KiDS/ImSim/pipeline/data/COSMOS_25.2_training_sample')
+
 #---------------------------------- Functions ------------------------------------------------------
 
 def rng_generator(base_seed, g1, g2, exp_nr, psfset_id):
@@ -35,7 +44,7 @@ def rng_generator(base_seed, g1, g2, exp_nr, psfset_id):
     return rng_seed
 
 def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
-                        g1,g2,psf,pixel_scale,mag_zero,gal_n):
+                        g1,g2,psf,pixel_scale,mag_zero,gal_n,gal_id):
 
     # Convert Lensfit scale radius to GalSim azimuthally averaged half light radius
     gal_e = numpy.sqrt(gal_e1**2+gal_e2**2)
@@ -47,13 +56,16 @@ def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
         #gal_size = gal_size*numpy.sqrt((1.-gal_e)/(1.+gal_e))
         ### *** HACK ALERT!!! ***
         gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))*5./3         # arcsec
-        gal = galsim.Sersic(flux=1., n=gal_n, half_light_radius=gal_size,
+        gal = galsim.Sersic(flux=1., n=abs(gal_n), half_light_radius=gal_size,
                             trunc=4.5*gal_size,flux_untruncated=False)
     elif gal_bt==1:
         #gal = galsim.DeVaucouleurs(flux=1., half_light_radius=gal_size)
         gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
         gal = galsim.Sersic(flux=1., n=4, half_light_radius=gal_size, 
                             trunc=4.5*gal_size,flux_untruncated=False)
+    elif gal_bt==5:
+        ## Real COSMOS galaxy is available
+        gal = galsim.RealGalaxy(rgc,id=int(id_map[gal_id]))
     else:
         gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
         #bulge = galsim.DeVaucouleurs(flux=gal_bt, half_light_radius=gal_size)
@@ -71,10 +83,17 @@ def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
     gal = gal.withFlux(10**(-0.4*(gal_mag-mag_zero)))
     # Galaxy ellipticity
     # No longer copy every object, but use new GS feature which works (see demo5.py)
-    gal2 = gal.shear(g1=-gal_e2, g2=gal_e1)
-    gal3 = gal.shear(g1=-gal_e1, g2=-gal_e2)
-    gal4 = gal.shear(g1=gal_e2, g2=-gal_e1)
-    gal = gal.shear(g1=gal_e1, g2=gal_e2)
+
+    if gal_bt==5:
+        ## Don't apply galaxy ellipticity to the RGC!
+        gal2 = gal.rotate(45*galsim.degrees)
+        gal3 = gal.rotate(90*galsim.degrees)
+        gal4 = gal.rotate(135*galsim.degrees)
+    else:
+        gal2 = gal.shear(g1=-gal_e2, g2=gal_e1) # +45 degrees, cc
+        gal3 = gal.shear(g1=-gal_e1, g2=-gal_e2) # +90 degrees, cc
+        gal4 = gal.shear(g1=gal_e2, g2=-gal_e1) # +135 degrees, cc
+        gal = gal.shear(g1=gal_e1, g2=gal_e2)
 
     # Apply cosmological shear
     gal = gal.shear(g1=g1, g2=g2)
@@ -190,14 +209,16 @@ def create_imsims(g1,g2,nproc,
 
         # Loop over all objects that go into the image
         k=0; kk=0
-        with open(path_to_prior_file) as fileobject:
+        if True:
+          with open(path_to_prior_file) as fileobject:
             for line in fileobject:
                 if line[0]=='#': continue
                 k+=1
                 try:
-                    (x,y,gal_mag,gal_size, gal_e1,gal_e2,gal_bt,gal_n,gal_ZB,gal_ID) = [float(lineobject) for lineobject in line.split()]
+                    (x,y,gal_mag,gal_size, gal_e1,gal_e2,gal_bt,gal_n,gal_ZB4,gal_ZB9,gal_ID) = [float(lineobject) for lineobject in line.split()]
                 except:
                     (x,y,gal_mag,gal_size, gal_e1,gal_e2,gal_bt,gal_n,gal_ZB) = [float(lineobject) for lineobject in line.split()]
+                    gal_ID = -999
                 #print k, x, y
 
                 # Apply the dither + pointing error from prior file
