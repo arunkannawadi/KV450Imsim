@@ -210,8 +210,7 @@ def create_imsims(g1,g2,nproc,
 
         # Loop over all objects that go into the image
         k=0; kk=0
-        if True:
-          with open(path_to_prior_file) as fileobject:
+        with open(path_to_prior_file) as fileobject:
             for line in fileobject:
                 if line[0]=='#': continue
                 k+=1
