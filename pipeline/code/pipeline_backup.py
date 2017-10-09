@@ -981,19 +981,7 @@ if __name__ == '__main__':
             g1g2ShearRange = RUNID.split('_')[0]
             g1g2ShearPSF = RUNID.split('_')[1]
 
-            # priorFilePrevious = '/users/ianfc/kids/priors4/prior_%s_%s' % (g1g2ShearRange, g1g2ShearPSF)
-            # priorFilePrevious = '/users/ianfc/priors/bright_small_gals_prior_psf2'
-            # Call priors code to generate a set of priors.
-            print '      Generating Priors'
             startTime = time.time()
-
-            ## Fetch the random seed only if you want to reproduce the previous runs. Else, see it to None
-            if psfSet<5 and (g1g2[0]**2+g1g2[1]**2 > 0.03**2): ## either the PSFs in the vault or if we are running 0 shear tests
-                random_seed = fetch_random_seed(RUNID)
-            else:
-                base_seed = 1234567
-                random_seed = rng_generator(base_seed, g1g2[0], g1g2[1], psfSet)
-            #random_seed = None
 
 ##AKJ:  Copy the prior file from REP030516 to force a comparison
 #            input_prior = '/disks/shear15/KiDS/ImSim/pipeline/archive/REP030516/'+RUNID.rpartition('_')[0]+'_REP030516/prior'
@@ -1004,6 +992,21 @@ if __name__ == '__main__':
 ## AKJ: Turn off creating priorfile to force a comparison
 
             if not 1 in skipBlock: ## Functional block 1 -  Generate the prior file
+                # priorFilePrevious = '/users/ianfc/kids/priors4/prior_%s_%s' % (g1g2ShearRange, g1g2ShearPSF)
+                # priorFilePrevious = '/users/ianfc/priors/bright_small_gals_prior_psf2'
+                # Call priors code to generate a set of priors.
+                print '      Generating Priors'
+
+                ## Fetch the random seed only if you want to reproduce the previous runs. Else, see it to None
+                if psfSet<5 and (g1g2[0]**2+g1g2[1]**2 > 0.03**2): ## either the PSFs in the vault or if we are running 0 shear tests
+                    random_seed = fetch_random_seed(RUNID)
+                    print "Random seed fectched successfully."
+                else:
+                    base_seed = 1234567
+                    random_seed = rng_generator(base_seed, g1g2[0], g1g2[1], psfSet)
+                    print "Random seed generated successfully."
+                #random_seed = None
+
                 imsimpriors.create_priorfile(psfSet,
                                              parser.get('priors', 'besancon_path'),
                                              '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
