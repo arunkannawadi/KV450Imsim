@@ -24,6 +24,7 @@ import optparse
 import galsim
 from astropy.io import fits
 import pyfits
+import correlate_noisy as cn
 
 #---------------------------------For real COSMOS galaxies-----------------------------------------
 id_map_filename = '/disks/shear15/KiDS/ImSim/pipeline/data/id_map_bd'
@@ -351,15 +352,55 @@ def create_imsims(g1,g2,nproc,
         # rng = galsim.BaseDeviate(12345)
         #print rng, rng
         full_image_noiseless = full_image.copy()
-        # Add Gaussian noise to the image with specified sigma
-        full_image.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-        full_image2.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-        full_image3.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-        full_image4.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
 
+        ## Save the noiseless image
+
+        try:
+            correlated_noise = bool(int(configFile.get('imsim','correlated_noise')))
+        except:
+            correlated_noise = False ## default
+            print "Failed to fetch the value of correlated_noise flag from the config file. Using the default value.", correlated_noise
+
+        if not correlated_noise:
+            print "Adding UNcorrelated noise"
+            # Generate Gaussian noise image with specified sigma
+            noise_image = galsim.Image(full_image.bounds)
+            noise_image2 = galsim.Image(full_image2.bounds)
+            noise_image3 = galsim.Image(full_image3.bounds)
+            noise_image4 = galsim.Image(full_image4.bounds)
+                
+            noise_image.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+            noise_image2.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+            noise_image3.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+            noise_image4.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+
+            # Add Gaussian noise to the scene
+            full_image += noise_image
+            full_image2 += noise_image2
+            full_image3 += noise_image3
+            full_image4 += noise_image4
+        
+        else:
+            print "Adding correlated noise"
+
+            ## Get a covariance matrix
+            cov_matrix = pyfits.getdata('/disks/shear15/KiDS/ImSim/pipeline/utils/noisecovariance/covariance_image.fits')[23]
+
+            ## Put the images in a list so we don't have to keep all corr noise images in memory, leading to MemoryError
+            full_images = [full_image, full_image2, full_image3, full_image4]
+
+            for im_idx, fim in enumerate(full_images):
+                nim = galsim.Image(fim.bounds)
+                nim.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+                cnim = cn.correlate_noise(nim.array,cov_matrix)
+                fim += cnim
+        
+            # Add Gaussian noise to the scene
+        
         ## AKJ: Save the noise field
         noise_field = full_image - full_image_noiseless
         print rng
+        print "Chipping images"
 #        raise ValueError("Enough...")
         noise_field.write('/disks/shear15/KiDS/ImSim/temp/codecomp/RH_stamps/noise_exp{0}_seed{1}.fits'.format(exposure_number,long(random_seed)))
 
