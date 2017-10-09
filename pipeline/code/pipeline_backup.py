@@ -931,17 +931,25 @@ if __name__ == '__main__':
 
     # Get some prior parameters
     realistic = bool(int(parser.get('priors', 'realistic')))
+
     if realistic:
         randomize_positions = bool(int(parser.get('priors', 'randomize_positions')))
         randomize_orientations = bool(int(parser.get('priors', 'randomize_orientations')))
         scramble_mod_e = bool(int(parser.get('priors','scramble_mod_e')))
+        use_scrambled_e = bool(int(parser.get('priors','use_scrambled_e')))
+        real_galaxy = bool(int(parser.get('priors','real_galaxy')))
     else:
         randomize_positions, randomize_orientations = True, True ## does not matter
         scramble_mod_e = False ## does not matter
+        use_scrambled_e = False ## does not matter
+        real_galaxy = False ## does not matter
 
     print '  Realistic priors? :     ', realistic
+    print '  Real galaxy images? :   ', real_galaxy
     print '  Randomizing positions? :   ', randomize_positions
     print '  Randomizing_orientations? :    ', randomize_orientations
+    print '  Using randomized ellipticity? :   ', use_scrambled_e
+    print '  Randomize ellipticities further? : ', scramble_mod_e
 
     # Check if user specifices to run SExtractor on all rotations
     sexonrot = int(parser.get('sextractor', 'sexonrot'))
@@ -1007,8 +1015,9 @@ if __name__ == '__main__':
                                              random_seed=random_seed,
                                              randomize_positions=randomize_positions,
                                              randomize_orientations=randomize_orientations,
-                                             scramble_mod_e=scramble_mod_e,
-                                             realistic=realistic, include_pointing_error=True
+                                             scramble_mod_e=scramble_mod_e, use_scrambled_e=use_scrambled_e,
+                                             realistic=realistic, real_galaxy=real_galaxy,
+                                             include_pointing_error=True
                                              )
                 if not realistic:
                     ## Append a dummy column, since the Sersic n column will be missing, which the imsim routine expects
@@ -1087,6 +1096,10 @@ if __name__ == '__main__':
                 else:
                     sextractorPositions(chip_rot_name='chip', rot_number=0)
 
+            ## If it passed all the 3 functional blocks, run lensfit
+            if not 4 in skipBlock: ## Functional block 4 - Run lensfit
+
+                ## Moved from block 3 to block 4
                 # Create LensFIT Catalogue
                 if sexonrot==1:
                     for nRot in range(0, 1+int(parser.get('imsim', 'n_rot'))):
@@ -1094,8 +1107,6 @@ if __name__ == '__main__':
                 else:
                     createLensFITCatalog(0)
 
-            ## If it passed all the 3 functional blocks, run lensfit
-            if not 4 in skipBlock: ## Functional block 4 - Run lensfit
 
                 # Run LensFIT for Nominal and Rotated Images
                 flensfit(isRotated=False, rotationNumber=0)
