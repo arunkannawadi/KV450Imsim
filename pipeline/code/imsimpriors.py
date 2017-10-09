@@ -67,8 +67,8 @@ def generate_header(current_psf_set, psfset_path, include_pointing_error=False, 
     return header
 
 def create_COSMOS_priors(current_psf_set, output_pathname, path_to_bsc_model, psfset_path, \
-                         randomize_positions=True, randomize_orientations=False, scramble_mod_e=False,
-                         include_stars=True, include_pointing_error=False, random_seed=None, n_exposures=5):
+                         randomize_positions=True, randomize_orientations=False, scramble_mod_e=False, use_scrambled_e=False,
+                         include_stars=True, include_pointing_error=False, random_seed=None, n_exposures=5, real_galaxy=False):
 
     header_list = generate_header(current_psf_set, psfset_path, include_pointing_error=include_pointing_error, random_seed=random_seed, n_exposures=n_exposures)
     header = ''
@@ -94,17 +94,28 @@ def create_COSMOS_priors(current_psf_set, output_pathname, path_to_bsc_model, ps
     star_r = numpy.zeros_like(star_mag)
     star_f = -numpy.ones_like(star_mag)
     star_n = numpy.zeros_like(star_mag)
-    star_ZB = numpy.zeros_like(star_mag)
+    star_ZB4 = numpy.zeros_like(star_mag)
+    star_ZB9 = numpy.zeros_like(star_mag)
     star_ID = -numpy.ones_like(star_mag)
 
-    star_dat = numpy.array([star_x,star_y,star_mag,star_r,star_e1,star_e2,star_f,star_n,star_ZB,star_ID],)
+    star_dat = numpy.array([star_x,star_y,star_mag,star_r,star_e1,star_e2,star_f,star_n,star_ZB4,star_ZB9,star_ID],)
 
     ## ** Galaxies ** ##
-    input_truth_catalog = '/disks/shear15/KiDS/ImSim/pipeline/data/prior_reduced_all_sersic_ZB_OBJNO'
+    if use_scrambled_e:
+        input_truth_catalog = '/disks/shear15/KiDS/ImSim/pipeline/data/prior_reduced_all_scrambled_sersic_ZB9_OBJNO_q'
+        if real_galaxy is True:
+            print "'real_galaxy=True' and 'use_scrambled_e=True' are incompatible. Ignoring 'real_galaxy=True' condition."
+
+    else:
+        input_truth_catalog = '/disks/shear15/KiDS/ImSim/pipeline/data/prior_reduced_all_sersic_ZB9_OBJNO'
+        #input_truth_catalog = '/disks/shear15/KiDS/ImSim/pipeline/data/reduced_KiDS_Griffith_iMS1_testing.cat'
+        if real_galaxy is True:
+            input_truth_catalog += '_real'
+
     gal_dat = numpy.loadtxt(input_truth_catalog, comments='#')
 
     ## Remove (mock) stars in the catalog
-    cuts = gal_dat[:,-3]>=0 ## TODO: Change it to a positive index!!!
+    cuts = numpy.abs(gal_dat[:,-4])>=0.3 ## TODO: Change it to a positive index!!!
 
     gal_dat = gal_dat[cuts]
 
@@ -132,32 +143,38 @@ def create_COSMOS_priors(current_psf_set, output_pathname, path_to_bsc_model, ps
             gal_dat[gg,4], gal_dat[gg,5] = rndm_e.real, rndm_e.imag
 
     if scramble_mod_e:
-        new_indices = numpy.random.permutation(len(gal_dat))
-        new_g1 = gal_dat[:,4][new_indices]
-        new_g2 = gal_dat[:,5][new_indices]
+        if use_scrambled_e:
+            print "You are using scrambled ellipticity prior. Randomizing mod_e will only add noise."
+        if real_galaxy:
+            print "You are using 'real_galaxy=True'. I cannot scramble the ellipticities"
+        else:
+            new_indices = numpy.random.permutation(len(gal_dat))
+            new_g1 = gal_dat[:,4][new_indices]
+            new_g2 = gal_dat[:,5][new_indices]
 
-        gal_dat[:,4] = new_g1
-        gal_dat[:,5] = new_g2
+            gal_dat[:,4] = new_g1
+            gal_dat[:,5] = new_g2
 
 
+    print star_dat.shape, gal_dat.shape
     if include_stars:
         dat = numpy.append(star_dat.T, gal_dat, axis=0)
     else:
         dat = gal_dat
 
     print star_dat.shape, gal_dat.shape, dat.shape
-    numpy.savetxt(output_pathname, dat, header=header, fmt=['%.2f','%.2f','%.2f','%.3f','%.4f','%.4f','%.3f','%.3f','%.2f','%d'])
+    numpy.savetxt(output_pathname, dat, header=header, fmt=['%.2f','%.2f','%.2f','%.3f','%.4f','%.4f','%.3f','%.3f','%.2f','%.2f','%d'])
 
 def create_priorfile(current_psf_set, path_to_bsc_model, output_pathname, psfset_path, grid_positions=None, nr_of_stars=True, nr_of_bright_gals=True, nr_of_faint_gals=True,
-        random_seed=None, randomize_positions=True, randomize_orientations=False, scramble_mod_e=False, include_stars=True, include_pointing_error=False, n_exposures=5, realistic=True):
+        random_seed=None, randomize_positions=True, randomize_orientations=False, scramble_mod_e=False, use_scrambled_e=False, include_stars=True, include_pointing_error=False, n_exposures=5, realistic=True, real_galaxy=False):
 
         if realistic:
             print "Ignoring the keywords: grid_positions, nr_of_stars, nr_of_bright_gals, nr_of_faint_gals"
             create_COSMOS_priors(current_psf_set, output_pathname, path_to_bsc_model, psfset_path, randomize_positions, randomize_orientations,
-                                    scramble_mod_e, include_stars, include_pointing_error, random_seed, n_exposures)
+                                    scramble_mod_e, use_scrambled_e, include_stars, include_pointing_error, random_seed, n_exposures, real_galaxy)
 
         else:
-            print "Ignoring the keywords: randomize_positions, randomize_orientations, scramble_mod_e, include_stars, include_pointing_error, n_exposures"
+            print "Ignoring the keywords: randomize_positions, randomize_orientations, scramble_mod_e, use_scrambled_e, include_stars, include_pointing_error, n_exposures, real_galaxy"
             import priors_fixed_psf2_170324 as pfp
 
             pfp.create_priorfile(current_psf_set, path_to_bsc_model, output_pathname, psfset_path, grid_positions, nr_of_stars, nr_of_bright_gals, nr_of_faint_gals,
