@@ -484,7 +484,7 @@ def convertPSF(exposure):
 Call Swarp using subprocess command, configure the correct
 params file depending on a weight file coadd or a chip file coadd.
 '''
-def swarpChips(isWeights=False, chip_rot_name='chip', rot_number=0):
+def swarpChips(isWeights=False, chip_rot_name='chip', rot_number=0, resamp="Y"):
     print '      Running SWarp (isWeights : %s)' % isWeights
     print '      Running SWarp on rotation: %s' % rot_number
     sys.stdout.flush()
@@ -498,6 +498,8 @@ def swarpChips(isWeights=False, chip_rot_name='chip', rot_number=0):
         savePath = '%s%s/%s' % (TMPDIR, parser.get('directories','weight_directory'), parser.get('swarp','weights_save'))
         ''' Saves the useless output weights file '''
         swarpWeightPath = '%s%s/%s.weight' % (TMPDIR, parser.get('directories','weight_directory'), parser.get('swarp','weights_save'))
+
+        ctype = "SUM"
       else:
           ## We called this by mistake. Just exit
           return None
@@ -511,7 +513,9 @@ def swarpChips(isWeights=False, chip_rot_name='chip', rot_number=0):
         ''' Saves the useless output weights file '''
         swarpWeightPath = '%s%s/%s.weight' % (TMPDIR, chip_rot_name, parser.get('swarp','chips_save'))
 
-    swarpRun = '%s %s -c %s -IMAGEOUT_NAME %s -WEIGHTOUT_NAME %s' % (processPath, imagePath, paramPath, savePath, swarpWeightPath)
+        ctype = "AVERAGE"
+
+    swarpRun = '%s %s -c %s -IMAGEOUT_NAME %s -WEIGHTOUT_NAME %s -RESAMPLE %s -COMBINE_TYPE %s' % (processPath, imagePath, paramPath, savePath, swarpWeightPath, resamp, ctype)
     print 'The swarp command is '
     print swarpRun
 
@@ -864,6 +868,9 @@ if __name__ == '__main__':
     argopts.add_option("-s", "--skipblock", dest="skipblock",
                         default="-1",
                         help="Specify the blocks you want to skip.")
+    argopts.add_option("-R", "--resamp", dest="resamp",
+                        default="Y",
+                        help="Specify if swarp should resample.")
 
     (options, args) = argopts.parse_args()
     configPath = options.config
@@ -913,6 +920,8 @@ if __name__ == '__main__':
     # Get the skipblocks
     skipBlock = options.skipblock.split(',')
     skipBlock = [int(i) for i in skipBlock]
+
+    resamp = options.resamp
 
     print '  Random key          = %s' %randomKey
     print '  Running Range of g1 = %s' % g1Range
@@ -1042,7 +1051,7 @@ if __name__ == '__main__':
                                     '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
                                     '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
                                     'REMOVE THIS PARAMATER',
-                                    parser, ditherArray, TMPDIR, noise_sigma)
+                                    parser, ditherArray, TMPDIR, noise_sigma, randomKey)
                 print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
                 # Flush the stdoutput
@@ -1064,12 +1073,12 @@ if __name__ == '__main__':
 
             if not 3 in skipBlock: ## Functional block 3 - Run SWarp & SExtractor
                 # Swarp Chips/#Weights
-                swarpChips(isWeights=True)
+                swarpChips(isWeights=True, resamp=resamp)
                 if sexonrot==0:
-                    swarpChips(isWeights=False, chip_rot_name='chip')
+                    swarpChips(isWeights=False, chip_rot_name='chip',resamp=resamp)
                 else:
                     for nRot in range(0, 1+int(parser.get('imsim', 'n_rot'))):
-                        swarpChips(isWeights=False, chip_rot_name='chip', rot_number=nRot)
+                        swarpChips(isWeights=False, chip_rot_name='chip', rot_number=nRot,resamp=resamp)
 
                 # Sextractor Positions
                 if sexonrot==1:
