@@ -46,7 +46,8 @@ import socket
 warnings.simplefilter("ignore")
 from astropy.io import fits
 from os.path import basename
-
+from multiprocessing import Pool
+#import pdb; pdb.set_trace()
 '''
 Global Params.
 '''
@@ -202,7 +203,7 @@ def extractChip(imageData, chipGap, chipDimX, chipDimY, xIndex, yIndex):
     yEnd = (yStart + chipDimY)
 
     # Crop the data.
-    chipData = imageData[yStart:yEnd, xStart:xEnd]
+    chipData = imageData[int(yStart):int(yEnd), int(xStart):int(xEnd)]
 
     return chipData
 
@@ -629,6 +630,8 @@ def createWorkFolder(g1, g2, psfSet):
     psfDir = '%s%s' % (TMPDIR, parser.get('directories','psf_directory'))
     weightsDir = '%s%s' % (TMPDIR, parser.get('directories','weight_directory'))
     galsimPSFDir = '%s%s' % (TMPDIR, parser.get('directories','galsim_psf_directory'))
+    sceneDir = '%s%s' % (TMPDIR, parser.get('directories','scene_directory'))
+    noiseDir = '%s%s' % (TMPDIR, parser.get('directories','noise_directory'))
 
     try:
         os.mkdir(TMPDIR)
@@ -637,6 +640,8 @@ def createWorkFolder(g1, g2, psfSet):
         os.mkdir(psfDir)
         os.mkdir(weightsDir)
         os.mkdir(galsimPSFDir)
+        os.mkdir(sceneDir)
+        os.mkdir(noiseDir)
     except:
         print "The working directories already exist."
 
@@ -775,6 +780,24 @@ def append_n_column(prior):
     with open(prior,'w') as f:
         f.writelines(newlines)
 
+def shrink_r(prior):
+    """ Takes in a prior file and shrink the 4th column by 60%
+    """
+    header = [ ]
+    with open(prior,'r') as f:
+      while True:
+        line = f.readline()
+        if line[0]=='#':
+            header.append(line[1:])
+        else:
+            break
+    header = ''.join(header)
+
+    prior_dat = np.loadtxt(prior, comments='#')
+    prior_dat[:,3] = 0.6*prior_dat[:,3]
+    shutil.move(prior,prior+'_unshrunk')
+    np.savetxt(prior, prior_dat, header=header)
+
 def make_it_sersic(prior):
     """ Takes in a prior file that imsimpriors generated and see B/T==9 while filling in n
     """
@@ -819,7 +842,38 @@ def rng_generator(base_seed, g1, g2, psfset_id):
     ## All 5x416 square degrees get different rng_seed, so that the noise realisations don't repeat irrespective of parallelization
     rng_seed = base_seed + int(3+cmath.phase(g)*4/np.pi) + 10*psfset_id
     return rng_seed
-    
+   
+def copy_images(runID, rot, ref_run='TSTnewinputglobalRecal'):
+    if rot==0:
+        chipdir = 'chip'
+    else:
+        chipdir = 'chiprot0{0}'.format(rot)
+
+    destdir = os.path.join(TMPDIR,chipdir)
+    srcdir = os.path.join(TMPDIR.replace(runID.split('_')[-1],ref_run),chipdir)
+    if False:
+        def mycp(ff): shutil.copy(os.path.join(srcdir,ff),destdir); return ff
+        p = Pool(12)
+        p.map_async(mycp,os.listdir(srcdir))
+    else:
+        for ff in os.listdir(srcdir):
+            shutil.copy(os.path.join(srcdir,ff),destdir)
+
+def delete_images(runID,rot):
+    if rot==0:
+        chipdir = 'chip'
+    else:
+        chipdir = 'chiprot0{0}'.format(rot)
+
+    if False:
+        def mydel(ff): shutil.remove(os.path.join(TMPDIR,chipdir,ff)); return ff
+        p = Pool(12)
+        p.map_async(mydel,os.listdir(os.path.join(TMPDIR,chipdir)))
+    else:
+        srcdir = os.path.join(TMPDIR,chipdir)
+        for ff in os.listdir(srcdir):
+            os.remove(os.path.join(srcdir,ff))
+
 """
 Main Method.
 --------------------------------------
@@ -1025,6 +1079,9 @@ if __name__ == '__main__':
                 if not realistic:
                     ## Append a dummy column, since the Sersic n column will be missing, which the imsim routine expects
                     append_n_column('%s/%s' %(ARCHDIR, parser.get('priors', 'prior_catalog')))
+                    ### *** HACK ALERT !!! ***
+                    #shrink_r('%s/%s' %(ARCHDIR, parser.get('priors', 'prior_catalog')))
+                    ## Shrink the size by 60% so that the multiplication by 5./3 in imsim_RH_sersic restores it 
 
                 if (realistic==0) & (sersic_only==1):
                     ## Randomly plug in Sersic N values and set B/T == 9
@@ -1112,34 +1169,45 @@ if __name__ == '__main__':
 
 
                 # Run LensFIT for Nominal and Rotated Images
+                ref_run = 'TSTnewinputglobalRecal' if randomKey=='TSTnewinputmcal' else 'TSTnewinpGRscrame'
+                #copy_images(RUNID,rot=0, ref_run=ref_run)
                 flensfit(isRotated=False, rotationNumber=0)
+                #delete_images(RUNID,rot=0)
                 for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
+                #for nRot in [2]:
+                    #copy_images(RUNID,rot=nRot+1, ref_run=ref_run)
                     flensfit(isRotated=True, rotationNumber=nRot + 1)
+                    #delete_images(RUNID,rot=nRot+1)
 
                 # Apply the weight recalibration.
-                weight_recal_script = parser.get('lensfit', 'weights_recal_path')
+#                weight_recal_script = parser.get('lensfit', 'weights_recal_path')
 
-                command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
-                process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-                stdout, stderr = process.communicate()
+#                command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
+#                process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+#                stdout, stderr = process.communicate()
 
-                for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                    command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, nRot + 1)
-                    process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-                    stdout, stderr = process.communicate()
+#                for nRot in xrange(0, int(parser.get('imsim', 'n_rot'))):
+#                    command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, nRot + 1)
+#                    process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+#                    stdout, stderr = process.communicate()
 
-                    # Convert ASCII to FITS Table
-    #            AsciiToFits('output.fits.asc.scheme2b_corr')
+#                # Convert ASCII to FITS Table
+#                AsciiToFits('output.fits.asc.scheme2b_corr')
 
-    #            for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-    #                AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (nRot+1))
+#               for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
+#                    AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (nRot+1))
 
                 # Compress the data into an archive
-                compressArchive()
+#                compressArchive()
         
                 # Remove the temp folders if specificed to do so - PERMANENTLY DISABLED FOR NOW
-    #            if removeTemp:
-    #                shutil.rmtree(TMPDIR)
+                if removeTemp:
+                    shutil.rmtree(os.path.join(TMPDIR,'weight'))
+                    shutil.rmtree(os.path.join(TMPDIR,'chip'))
+                    shutil.rmtree(os.path.join(TMPDIR,'chiprot01'))
+                    shutil.rmtree(os.path.join(TMPDIR,'chiprot02'))
+                    shutil.rmtree(os.path.join(TMPDIR,'chiprot03'))
+
         
                 # Remove uncompressed archive folder - PERMANENTLY DISABLED FOR NOW
     #            shutil.rmtree(ARCHDIR)

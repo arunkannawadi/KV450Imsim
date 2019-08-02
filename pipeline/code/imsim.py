@@ -67,6 +67,10 @@ base_seed = 1234567
 ## Now some GalSim parameters
 gsp = galsim.GSParams(maximum_fft_size=16384)
 
+## RNG circus to match RH imsims
+#rng_seeds =  [rng_seed + i*68 for i in xrange(5)] ## One rng_seed per exposure
+#rngs = [ galsim.BaseDeviate(rs) for rs in rng_seeds ]
+
 ## Sensible values for the parameters
 n_min, n_max = 0.3, 6.2 # limits set by GalSim
 q_min, q_max = 0.05, 1.0
@@ -77,7 +81,10 @@ wcs_filename = "/disks/shear14/KiDS_simulations/Cosmos/Theli_image/KIDS_150p1_2p
 wcs = galsim.AstropyWCS(wcs_filename)
 #wcs = galsim.AstropyWCS("/disks/shear14/KiDS_simulations/Cosmos/AW_images/KIDS450_150.1_2.2_r_sci.fits")
 canvas_bounds = galsim.fits.read(wcs_filename).bounds
-
+#canvas_size_x = 16810
+#canvas_size_y = 16530
+#canvas_bounds = galsim.BoundsI(xmin=0,ymin=0,xmax=canvas_size_x,ymax=canvas_size_y)
+## The origin has to be 0,0 to get the same X, Y as in the COSMOS data
 
 ### Default cut
 #default_cuts = (mask)&(rank>0)&(distance2d<0.5)&(weight>5)
@@ -310,9 +317,14 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id, psf_params
     DEC = galaxy_dat.field('DEC_THELI').copy() ## DEC
     RA[rank==0], DEC[rank==0] = galaxy_dat.field('RA')[rank==0], galaxy_dat.field('DEC')[rank==0]
 
+#    ## NEW! Positions in Image coordinates
+#    X = galaxy_dat.field('X_IMAGE')
+#    Y = galaxy_dat.field('Y_IMAGE')
+
     ## Use Theli magnitudes when available. Else, use MAGR
     mag = galaxy_dat.field('MAG_AUTO_THELI').copy()
     mag[rank==0] = galaxy_dat.field('MAGR')[rank==0]
+#    mag = galaxy_dat.field('MAGNITUDE')
 
     ## Avoid exponentiating magnitudes directly to minimize overflow/numerical errors
     #F0 =  gain*exp_time*(10**(0.4*magAB_zeropoint)) ## for FLUX_GAAP
@@ -743,6 +755,14 @@ def imsim(exp_id, rot_id, psfset_id, g1, g2, n_rotations, ditherArray, dir_exp, 
         #full_image_noisy_filename = full_image_filename+'_noisy.fits'
         ## Chop the image and save it
         chopped_image = chopImage(full_images, output_filename=full_image_noisy_pathname)
+#        chopped_image = chopImage(full_images, None)
+#        noise_field = galsim.Image(chopped_image.bounds) # RNG circus
+#        noise_field.addNoise(full_image_noise) # RNG circus
+#        if rot_id == 0:
+#            noise_field.write('/disks/shear15/KiDS/ImSim/temp/codecomp/KJ_stamps/noisy_exp{0}_seed{1}.fits'.format(exp_id,rng_seeds[exp_id])) #RNG circus
+#            print full_image_noise.getRNG()
+#        chopped_image += noise_field # RNG circus
+#        chopped_image.write(full_image_noisy_pathname)
         #full_images[rot_id].write(full_image_noisy_pathname)
         logger.info("Noisy Image written on to the file at {0}".format(time.ctime()))
         swap_pc_cd_header(full_image_noisy_pathname)
@@ -763,12 +783,14 @@ def chopImage(canvas_image, output_filename=None):
 
     old_bounds = canvas_image.bounds
     center = old_bounds.center()
-    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2 -1 #n(pix) = xmax-xmin+1
-    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2 -1 #n(pix) = ymax-ymin+1
+    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2 #-1 #n(pix) = xmax-xmin+1
+    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2 #-1 #n(pix) = ymax-ymin+1
 
     new_bounds = galsim.BoundsI(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 
     new_image = canvas_image[new_bounds]
+
+    assert new_image.array.shape = (image_size_y, image_size_x) ## until the bug is resolved finally
 
     if output_filename is not None:
         print "output_filename provided. Writing it on to the disk."
