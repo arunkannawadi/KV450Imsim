@@ -32,6 +32,10 @@ id_map_array = numpy.loadtxt(id_map_filename)
 id_map = dict(zip(id_map_array[:,0],id_map_array[:,1]))
 rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_25.2.fits',dir='/disks/shear15/KiDS/ImSim/pipeline/data/COSMOS_25.2_training_sample')
 
+cosmoscat = galsim.COSMOSCatalog(dir='/disks/shear15/KiDS/ImSim/pipeline/data/COSMOS_25.2_training_sample',use_real=False)
+param_cat = cosmoscat.param_cat
+origIndices = cosmoscat.getOrigIndex(numpy.arange(0,81520,1.).astype(int))
+
 #---------------------------------- Functions ------------------------------------------------------
 
 def rng_generator(base_seed, g1, g2, exp_nr, psfset_id):
@@ -67,6 +71,12 @@ def create_gal_stamp(x,y,gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
     elif gal_bt==5:
         ## Real COSMOS galaxy is available
         gal = galsim.RealGalaxy(rgc,id=int(id_map[gal_id]))
+    elif 0.0<=gal_bt<1.:
+        gal_ident = id_map[gal_id]
+        origIndex = numpy.where(param_cat['IDENT']==gal_ident)[0][0]
+        newIndex = numpy.where(origIndices==origIndex)[0][0]
+        gal = cosmoscat.makeGalaxy(index=newIndex)
+
     else:
         gal_size = gal_size*numpy.sqrt((1-gal_e)/(1+gal_e))         # arcsec
         #bulge = galsim.DeVaucouleurs(flux=gal_bt, half_light_radius=gal_size)
@@ -210,6 +220,7 @@ def create_imsims(g1,g2,nproc,
 
         # Loop over all objects that go into the image
         k=0; kk=0
+        prev_gal_ID = None
         with open(path_to_prior_file) as fileobject:
             for line in fileobject:
                 if line[0]=='#': continue
@@ -292,13 +303,22 @@ def create_imsims(g1,g2,nproc,
                         stamp4 = duplicate_stamps4[int(gal_mag)]
                     else:
                         # Create an original stamp
-                        try: #AKJ
-                            stamp,stamp2,stamp3,stamp4 = create_gal_stamp(x,y,
-                                                                gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
-                                                                    g1,g2,psf,pixel_scale,mag_zero,gal_n,gal_ID)
-                        except: #AKJ
-                            print " Failed creating postage stamp for ", gal_ID, ".It is a bright galaxy and had B/T = ", gal_bt
-                            continue
+                        if not gal_ID==prev_gal_ID:
+                            try: #AKJ
+                                stamp,stamp2,stamp3,stamp4 = create_gal_stamp(x,y,
+                                                                    gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
+                                                                        g1,g2,psf,pixel_scale,mag_zero,gal_n,gal_ID)
+                                draw_success = True
+                                prev_gal_ID = gal_ID
+                            except: #AKJ
+                                print " Failed creating postage stamp for ", gal_ID, ".It is a bright galaxy and had B/T = ", gal_bt
+                                draw_success = False
+                                continue
+
+                        else: ## i.e. if gal_ID==prev_gal_ID:
+                            if draw_success is False:
+                                continue ## Move on to the next catalog entry
+                            ## else, go on the paste the stamp
 
                         # Save every object from the duplication magnitude limit onwards
                         if gal_mag>=25:
@@ -353,6 +373,24 @@ def create_imsims(g1,g2,nproc,
         full_image_noiseless = full_image.copy()
 
         ## Save the noiseless image
+        dest_dir = os.path.join(tmpDir,'scene')
+        try:
+            full_image.write('scene_rot00.fits',dir=dest_dir)
+            full_image2.write('scene_rot01.fits',dir=dest_dir)
+            full_image3.write('scene_rot02.fits',dir=dest_dir)
+            full_image4.write('scene_rot03.fits',dir=dest_dir)
+        except:
+            pass
+
+        ## Save the noise image
+        dest_dir = os.path.join(tmpDir,'noise')
+        try:
+            noise_image.write('noise_rot00.fits',dir=dest_dir)
+            noise_image2.write('noise_rot01.fits',dir=dest_dir)
+            noise_image3.write('noise_rot02.fits',dir=dest_dir)
+            noise_image4.write('noise_rot03.fits',dir=dest_dir)
+        except:
+            pass
 
         try:
             correlated_noise = bool(int(configFile.get('imsim','correlated_noise')))
@@ -363,15 +401,30 @@ def create_imsims(g1,g2,nproc,
         if not correlated_noise:
             print "Adding UNcorrelated noise"
             # Generate Gaussian noise image with specified sigma
-            noise_image = galsim.Image(full_image.bounds)
-            noise_image2 = galsim.Image(full_image2.bounds)
-            noise_image3 = galsim.Image(full_image3.bounds)
-            noise_image4 = galsim.Image(full_image4.bounds)
-                
-            noise_image.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-            noise_image2.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-            noise_image3.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
-            noise_image4.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+            noise_image = galsim.Image(full_image.bounds,init_value=0.)
+            noise_image2 = galsim.Image(full_image2.bounds,init_value=0.)
+            noise_image3 = galsim.Image(full_image3.bounds,init_value=0.)
+            noise_image4 = galsim.Image(full_image4.bounds,init_value=0.)
+            
+            ## We provide a non-zero value for sky_level here since it doesn't have the background yet
+            ## We add the noise directly on the full_image to capture the shot noise from the stars,
+            ## and convert noise_image to be a constant background alone
+            if False:
+                full_image.addNoise(galsim.PoissonNoise(rng, sky_level=noise_sigma**2))
+                full_image2.addNoise(galsim.PoissonNoise(rng, sky_level=noise_sigma**2))
+                full_image3.addNoise(galsim.PoissonNoise(rng, sky_level=noise_sigma**2))
+                full_image4.addNoise(galsim.PoissonNoise(rng, sky_level=noise_sigma**2))
+            else:
+                noise_image.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+                noise_image2.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+                noise_image3.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+                noise_image4.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
+
+            ### Add the background level for BF effect testing only
+            #noise_image += noise_sigma**2
+            #noise_image2 += noise_sigma**2
+            #noise_image3 += noise_sigma**2
+            #noise_image4 += noise_sigma**2
 
             # Add Gaussian noise to the scene
             full_image += noise_image
@@ -381,27 +434,76 @@ def create_imsims(g1,g2,nproc,
         
         else:
             print "Adding correlated noise"
+            ## Load the noiseless images
+            #src_dir = os.path.join(tmpDir,'scene')
+            #full_image = galsim.fits.read(file_name='scene_rot00.fits',dir=src_dir)
+            #full_image2 = galsim.fits.read(file_name='scene_rot01.fits',dir=src_dir)
+            #full_image3 = galsim.fits.read(file_name='scene_rot02.fits',dir=src_dir)
+            #full_image4 = galsim.fits.read(file_name='scene_rot03.fits',dir=src_dir)
+
+            ### Load the noise images
+            #src_dir = os.path.join(tmpDir,'noise')
+            #noise_image = galsim.fits.read(file_name='noise_rot00.fits',dir=src_dir)
+            #noise_image2 = galsim.fits.read(file_name='noise_rot01.fits',dir=src_dir)
+            #noise_image3 = galsim.fits.read(file_name='noise_rot02.fits',dir=src_dir)
+            #noise_image4 = galsim.fits.read(file_name='noise_rot03.fits',dir=src_dir)
 
             ## Get a covariance matrix
-            cov_matrix = pyfits.getdata('/disks/shear15/KiDS/ImSim/pipeline/utils/noisecovariance/covariance_image.fits')[23]
-
+            cov_matrices = pyfits.getdata('/disks/shear15/KiDS/ImSim/pipeline/utils/noisecovariance/covariance_image.fits')
+            cov_matrix = numpy.average(cov_matrices[:32],axis=0)
+            assert cov_matrix.shape==(11,11)
             ## Put the images in a list so we don't have to keep all corr noise images in memory, leading to MemoryError
             full_images = [full_image, full_image2, full_image3, full_image4]
+            #noise_images = [noise_image, noise_image2, noise_image3, noise_image4]
 
             for im_idx, fim in enumerate(full_images):
+                #nim = noise_images[im_idx]
                 nim = galsim.Image(fim.bounds)
                 nim.addNoise(galsim.GaussianNoise(rng, sigma=noise_sigma))
                 cnim = cn.correlate_noise(nim.array,cov_matrix)
                 fim += cnim
+
+            #cnoise_image = cn.correlate_noise(noise_image.array,cov_matrix)
+            #cnoise_image2 = cn.correlate_noise(noise_image2.array,cov_matrix)
+            #cnoise_image3 = cn.correlate_noise(noise_image3.array,cov_matrix)
+            #cnoise_image4 = cn.correlate_noise(noise_image4.array,cov_matrix)
+
+            def write_image(data,filename,dirname):
+                hdu = fits.PrimaryHDU(data)
+                pathname = os.path.join(dirname,filename)
+                hdu.writeto(pathname,overwrite=True)
+
+            def read_image(filename,dirname):
+                pathname = os.path.join(dirname,filename)
+                data = pyfits.getdata(pathname)
+                return data
+
+            ## Write the image and read it again, since GalSim complains the array is not contiguous
+            dest_dir = os.path.join(tmpDir,'noise')
+            #write_image(cnoise_image,'cnoise_rot00.fits',dest_dir)
+            #write_image(cnoise_image2,'cnoise_rot01.fits',dest_dir)
+            #write_image(cnoise_image3,'cnoise_rot02.fits',dest_dir)
+            #write_image(cnoise_image4,'cnoise_rot03.fits',dest_dir)
+
+            #cnoise_image = read_image('cnoise_rot00.fits',dest_dir)
+            #cnoise_image2 = read_image('cnoise_rot01.fits',dest_dir)
+            #cnoise_image3 = read_image('cnoise_rot02.fits',dest_dir)
+            #cnoise_image4 = read_image('cnoise_rot03.fits',dest_dir)
         
             # Add Gaussian noise to the scene
+            # NumPy arrays can be added to GalSim Image instances
+            #full_image += cnoise_image
+            #full_image2 += cnoise_image2
+            #full_image3 += cnoise_image3
+            #full_image4 += cnoise_image4
         
         ## AKJ: Save the noise field
         noise_field = full_image - full_image_noiseless
         print rng
         print "Chipping images"
 #        raise ValueError("Enough...")
-        noise_field.write('/disks/shear15/KiDS/ImSim/temp/codecomp/RH_stamps/noise_exp{0}_seed{1}.fits'.format(exposure_number,long(random_seed)))
+        #full_image.write('/disks/shear15/KiDS/ImSim/temp/TSTRGC/exp{0}.fits'.format(exposure_number)) ## HACK ALERT
+        #noise_field.write('/disks/shear15/KiDS/ImSim/temp/codecomp/RH_stamps/noise_exp{0}_seed{1}.fits'.format(exposure_number,long(random_seed)))
 
         pipeline.chipImage(full_image.array,
                   int(configFile.get('chipping','chips_x')),
@@ -525,7 +627,8 @@ def create_imsims(g1,g2,nproc,
                             rng_seed),
                             path_to_prior_file.split('/')[-1]) )
 
-        rng_seed+=nobj
+        rng_seed+=nobj # this is what it should be.
+        #rng_seed+=82327 ## HACK ALERT
     #print '\n tasks have been put on task queue \n'
 
     # Make a queue for processes that are done
