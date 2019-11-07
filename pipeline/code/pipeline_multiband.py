@@ -1,15 +1,16 @@
-__author__ = 'Ian Fenech Conti'
+__author__ = 'Arun Kannawadi'
 
 """
-KiDS Image Simulations.
------------------------
+KiDS-VIKING-100 Multi-Band Image Simulations.
+---------------------------------------------
 
-Version         0.2.7
-Description     KiDS Image Simulations Pipeline.
-Developed by    Ian Fenech Conti (University of Malta)
-                Ricardo Herbonnet (Univeristy of Leiden)
-Developed on    Monday 8th June 2015
-Contact         ianfc89@gmail.com
+Version         0.1
+Description     KV1000 Multi-band Image Simulations Pipeline.
+Developed by    Arun Kannawadi (University of Leiden / Princeton University)
+                Ian Fenech Conti (University of Malta)
+                Ricardo Herbonnet (Univeristy of Leiden / StonyBrook)
+Developed on    Friday 2nd August 2019
+Contact         kannawadi.arun@gmail.com
 
 """
 
@@ -84,24 +85,52 @@ for each exposure.
 are defined at in the catalog file.
 '''
 def extractDithers():
-    print '      Extracting Dither Information';sys.stdout.flush()
-    path = '%s/%s' % (ARCHDIR, parser.get('priors','prior_catalog'))
+    print '      Extracting Dither information';sys.stdout.flush()
+    path = '%s/%s' % (ARCHDIR, parser.get('priors','dither_catalog'))
     exposures = int(parser.get('chipping','n_exposures'))
-    ditherArray = np.zeros((exposures, 2))
-    startIndex = 1
-    for exposure in xrange(0, exposures):
-        dither = readLineAtIndex(path, exposure + startIndex)
-        ditherArray[exposure, 0] = float(dither.split(':')[1].split()[0])
-        ditherArray[exposure, 1] = float(dither.split(':')[1].split()[1])
-    return ditherArray
+
+    ditherDict = dict.fromkeys(bands)
+    ditherArray = np.loadtxt(path)
+    ditherArrays = np.array_split(ditherArray, len(bands))
+
+    for band_idx, band in enumerate(ditherDict.keys()):
+        ditherDict[band] = ditherArrays[band_idx]
+
+    return ditherDict
+
+def extractPSF():
+    print '     Extracting PSF information'; sys.stdout.flush()
+    path = '%s/%s' % (ARCHDIR, parser.get('prior','psf_catalog'))
+    exposures = int(parser.get('chipping','n_exposures'))
+
+    psfDict = dict.fromkeys(bands)
+    psfArray = np.loadtxt(path)
+    psfArrays = np.array_split(psfArray, len(bands))
+
+    for band_idx, band in enumerate(psfDict.keys()):
+        psfDict[band] = psfArrays[band_idx]
+
+    return psfDict
+
+def extractNoise():
+    print '     Extracting Noise levels'; sys.stdyout.flush()
+    path = '%s/%s' % (ARCHDIR, parser.get('prior','noise_catalog'))
+    exposures = int(parser.get('chipping','n_exposures'))
+
+    noiseDict = dict.fromkeys(bands)
+    noiseArray = np.loadtxt(path)
+    for band_idx, band in enumerate(noiseDict.keys()):
+        noiseDict[band] = noiseArray[band_idx]
+
+    return noiseDict
 
 '''
 Loads an image from file. (Mainly used for
 testing)
 '''
-def loadData(path):
+def loadData(path, hdu_index=0):
     hdulist = pyfits.open(path)
-    data = hdulist[0].data
+    data = hdulist[hdu_index].data
     hdulist.close()
     return data
 
@@ -882,8 +911,8 @@ if __name__ == '__main__':
 
     print ''
     print '  ------------------------------------------------------------------------- '
-    print '  IMSIM Pipeline Started '
-    print '  Version 0.3.1'
+    print '  KV1000 ImSim Pipeline Started '
+    print '  Version 0.1'
     print '  Current Version (Full Run, Sextractor + Stars + Faint Gals + 5 Fixed PSFs)'
     print '  Started at : %s ' % time.strftime("%c")
     print '  Running on : %s' % socket.gethostname()
@@ -964,9 +993,6 @@ if __name__ == '__main__':
     g2Range = options.g2range.split(',')
     g2Range = [float(i) for i in g2Range]
 
-    # Get noise sigma level.
-    noise_sigma = float(options.noiseSigma)
-
     # Get the PSF Range.
     psfRange = options.psfrange.split(',')
     psfRange = [int(i) for i in psfRange]
@@ -981,10 +1007,12 @@ if __name__ == '__main__':
     print '  Running Range of g1 = %s' % g1Range
     print '  Running Range of g2 = %s' % g2Range
     print '  Running PSF Sets    = %s' % psfRange
-    print '  Noise Sigma         = %f' % noise_sigma
 
     # Get some prior parameters
     realistic = bool(int(parser.get('priors', 'realistic')))
+
+    # Name the bandpasses
+    bands = ['u','g','r','i','Z','Y','J','H','Ks']
 
     if realistic:
         randomize_positions = bool(int(parser.get('priors', 'randomize_positions')))
@@ -998,6 +1026,7 @@ if __name__ == '__main__':
         use_scrambled_e = False ## does not matter
         real_galaxy = False ## does not matter
 
+    print '  Passbands :  ', bands
     print '  Realistic priors? :     ', realistic
     print '  Real galaxy images? :   ', real_galaxy
     print '  Randomizing positions? :   ', randomize_positions
@@ -1108,19 +1137,21 @@ if __name__ == '__main__':
                 sys.stdout.flush()
 
             # Extract the dither information
-            ditherArray = extractDithers()
+            ditherDict = extractDithers()
+            psfDict = extractPSF()
+            noiseDict=  extractNoise()
 
             if not 2 in skipBlock: ## Functional block 2 - Generate the images
                 # Call the image generator code. Generates 10 images,
                 # 5 at nominal position and 5 at 90deg rotatation.
                 print '      Rendering Images ** USING NO IMSIM REMORPH **',
                 startTime = time.time()
-                imsim.create_imsims(g1g2[0], g1g2[1],
-                                    int(parser.get('imsim', 'n_threads')),
-                                    '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
-                                    '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
-                                    'REMOVE THIS PARAMATER',
-                                    parser, ditherArray, TMPDIR, noise_sigma, randomKey)
+                for band in bands:
+                    imsim.create_imsims(g1g2[0], g1g2[1],
+                                        int(parser.get('imsim', 'n_threads')),
+                                        '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
+                                        '%s%s_%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory'), band),
+                                        band, parser, ditherDict[band], psfDict[band], TMPDIR, noiseDict[band], randomKey)
                 print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
                 # Flush the stdoutput
