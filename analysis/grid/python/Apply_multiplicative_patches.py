@@ -106,8 +106,7 @@ use_old_data = False ## set True to use the catalogues with wrong LF weights and
 if use_old_data:
     Dir_KV450='/disks/shear10/hendrik/KV450_CATALOGUES_PATCH_V0.5.9/'  ## these have wrong LF weights and wrong 9-band ZB
 else:
-    Dir_KV450='/disks/shear10/arunkannawadi/KV450/KV450_CATALOGUES_PATCH/'
-    Dir_KV450='/disks/shear14/KIDS/KV450_CATALOGUES_PATCH_V0.5.9/'
+    Dir_KV450='/disks/shear14/KIDS/KV450_CATALOGUES_PATCH_V0.5.9_GOLD/' ## @Angus: Enter the path to the KV450 GOLD catalogues here
 #Name of the KiDS patches
 patches=['G9', 'G12', 'G15', 'G23', 'GS']
 
@@ -134,6 +133,9 @@ for xx in range(0,len(patches)):
         ## Really shouldn't have to use the binary star cuts again
         data_cuts = ((tbdata['bias_corrected_scalelength_pixels']<tbdata['binary_cut'])|(numpy.hypot(tbdata['bias_corrected_e1'],tbdata['bias_corrected_e2'])<0.8))&(tbdata['GAAP_Flag_ugriZYJHKs']==0)
         #data_cuts &= (tbdata['T_B']>1.9)
+        tbdata = tbdata[data_cuts]
+    else:
+        data_cuts = True ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
         tbdata = tbdata[data_cuts]
 
     ID=tbdata.SeqNr

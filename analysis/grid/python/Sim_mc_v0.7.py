@@ -209,6 +209,10 @@ mask_weight &=(w_sim_mask>0)&(fitClass_sim_weight!=-1)&(fitClass_sim_weight!=-10
 strict_star_cuts = (size_in_sim_weight>0.1-0.01*(mag_in_sim_weight-16.)) | (size_in_sim_weight==0) ## Filter out stars in HST masquerading as galaxies
 #mask_weight &= (strict_star_cuts)
 
+## Impose the SOM flags from the COSMOS catalogues here @Angus
+SOM_cuts = True
+mask_weight &= SOM_cuts
+
 w_sim_mask=w_sim_mask[mask_weight]
 e1_sim_mask=e1_sim_mask[mask_weight]
 e2_sim_mask=e2_sim_mask[mask_weight]

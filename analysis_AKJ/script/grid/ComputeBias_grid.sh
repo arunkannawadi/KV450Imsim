@@ -23,12 +23,14 @@ TomoFlag=Yes
 
 cd $CatDir ## new, added by AKJ
 
-for PSF in 10 
+for PSF in 13
 do
     masterFile=MasterCat_$(echo $name_run)_all_$(echo $PSF)_PSF.fits
     #masterFile=MasterCat_$(echo $name_run)_all_$(echo $PSF)_PSF_clean.fits
-    
-    #Calculate the surface of doom (using all data)
+
+    python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/assign_ZB.py  $name_run  $PSF ## propagate the COSMOS quantities to simulation outputs
+
+    #Calculate the surface of doom (no tomographic splitting)
     if [ ! -f $CatDir/Results/2bin/MV_$(echo $PSF)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
     then
         python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFile $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
@@ -55,7 +57,7 @@ done
 
 #Calculate the bias
 
-for PSF in 10
+for PSF in 13
 do
     masterFile=MasterCat_$(echo $name_run)_all_$(echo $PSF).fits ## set changed to all by AKJ
     surfaceOfDoom=MV_$(echo $PSF)_100_SignalToNoise_ResolutionAltMV_binning_global.txt
