@@ -3,6 +3,8 @@ from astropy.io import fits
 import pyfits as pf
 import os,sys
 from match import match
+from ConfigParser import SafeConfigParser
+import optparse
 
 def assignment(objno, catID, ZB9, sort=True):
     superset = set(objno)
@@ -26,30 +28,35 @@ def assignment(objno, catID, ZB9, sort=True):
     
 runID = sys.argv[1]
 psfID = sys.argv[2]
+configPath = sys.argv[3]
 
-ARCHDIR = '/disks/shear15/KiDS/ImSim/pipeline/archive/'
+# Load Configuration Settings.
+print '  Loading Config from %s' % configPath
+parser = SafeConfigParser()
+parser.read(configPath)
+
+ARCHDIR = parser.get('assign_ZB', 'ARCHDIR')
 prior_filename = 'prior'
 #shearIDs = [sID for sID in os.listdir(os.path.join(ARCHDIR,runID.split('/')[0].replace('globalRecal',''))) if sID.count('_')==2 and '.fits' not in sID]
 #print "No. of sub directories = ", len(shearIDs)
 
-all_galaxies_catname = '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars.cat'
+all_galaxies_catname = '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars_GOLDonly.cat'
 all_galaxies_cat = fits.open(all_galaxies_catname)
 all_galaxies_dat = all_galaxies_cat[1].data
 all_cuts =  (all_galaxies_dat['rank']==1)&(all_galaxies_dat['distance2d']<1.)&(all_galaxies_dat['OBJNO']>0) ## Z_B can be assigned only if its there in KiDS and in Griffith
 all_OBJNO = all_galaxies_dat['OBJNO'][all_cuts]
 all_SeqNr = all_galaxies_dat['SeqNr'][all_cuts]
 
-cosmos_photoz_catname = '/disks/shear14/KiDS_simulations/Cosmos/COSMOS_photoz.cat'
-cosmos_photoz_catname = '/disks/shear10/arunkannawadi/KV450/COSMOS/COSMOSadaptdepth_ugri.V0.5.9A_ZYJHK.V2.0_photoz_LF_mask_SG.cat.1'
-cosmos_photoz_catname = '/disks/shear14/KiDS_simulations/Cosmos/COSMOSadaptdepth_ugriZYJHKs_rot_rename_photoz.cat'
+cosmos_photoz_catname = parser.get('assign_ZB','COSMOSCatalogue')
 cosmos_photoz_cat = fits.open(cosmos_photoz_catname)
 cosmos_photoz_dat = cosmos_photoz_cat[1].data
 
 cosmos_idx, all_idx = match(R=cosmos_photoz_dat['SeqNr'], Q=all_SeqNr)
 
 ## Test the consistency between 4-band photo-z without having to provide all_idx as a sanity check
-np.testing.assert_array_equal(all_SeqNr[all_idx], cosmos_photoz_dat['SeqNr'][cosmos_idx])
-np.testing.assert_array_equal(all_galaxies_dat[all_cuts]['Z_B'], cosmos_photoz_dat['Z_B_ugri'][cosmos_idx])
+if len(cosmos_photoz_dat)>=143297:
+    np.testing.assert_array_equal(all_SeqNr[all_idx], cosmos_photoz_dat['SeqNr'][cosmos_idx])
+    np.testing.assert_array_equal(all_galaxies_dat[all_cuts]['Z_B'], cosmos_photoz_dat['Z_B_ugri'][cosmos_idx])
 
 ZB4 = cosmos_photoz_dat['Z_B_ugri'][cosmos_idx]
 ZB9 = cosmos_photoz_dat['Z_B'][cosmos_idx]
@@ -174,7 +181,7 @@ if not 'SeqNr' in masterCat_data.names:
 
 for SOM_colname in SOM_flags:
     if not SOM_colname in masterCat_data.names:
-        new_col = fits.Column(name=SOM_colname, format='J',array=new_array_dict[solname])
+        new_col = fits.Column(name=SOM_colname, format='J',array=new_array_dict[SOM_colname])
         new_coldefs = new_hdu.data.columns + new_col
         new_hdu = fits.BinTableHDU.from_columns(new_coldefs)
 
@@ -188,7 +195,8 @@ if False:
     new_hdu.data['ZB4_in'] = new_array_Z
     new_hdu = fits.BinTableHDU(data=new_hdu.data)
 if False:
-    griffith_laigle_cat = fits.open('/disks/shear14/arunkannawadi/catalogue_matching/Griffith_Laigle.fits')
+    griffith_laigle_catname = parser.get('assign_ZB','Griffith_Laigle')
+    griffith_laigle_cat = fits.open(griffith_laigle_catname)
     griffith_laigle_dat = griffith_laigle_cat[1].data
     idx, cuts = match(R=griffith_laigle_dat['OBJNO'], Q=objno)
     sub_array_Z = -5.0*np.ones(masterCat_cuts.sum())
@@ -213,6 +221,4 @@ if False:
             pass
     print "Assignment test complete!"
 output_pathname = masterCat_filename
-if 'shear14' in ARCHDIR:
-    output_pathname = output_pathname.replace('shear14/arunkannawadi','shear15')
 new_hdu.writeto(output_pathname, overwrite=True )

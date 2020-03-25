@@ -177,6 +177,10 @@ if(os.path.exists(file)):
     ls_var_sim_weight=fits_data[1].data['LS variance']
     fitClass_sim_weight=fits_data[1].data['fitclass']
     contamination_radius_sim=fits_data[1].data['contamination_radius']
+    
+    ## Impose the SOM flags from the COSMOS catalogues here @Angus
+    SOM_cuts = fits_data[1].data['Flag_SOM_speczquality4_NONE']==1
+    
     if(file_cal):
         m1_sim_weight=fits_data[1].data['m1_'+m_func]
         m2_sim_weight=fits_data[1].data['m2_'+m_func]
@@ -209,8 +213,6 @@ mask_weight &=(w_sim_mask>0)&(fitClass_sim_weight!=-1)&(fitClass_sim_weight!=-10
 strict_star_cuts = (size_in_sim_weight>0.1-0.01*(mag_in_sim_weight-16.)) | (size_in_sim_weight==0) ## Filter out stars in HST masquerading as galaxies
 #mask_weight &= (strict_star_cuts)
 
-## Impose the SOM flags from the COSMOS catalogues here @Angus
-SOM_cuts = True
 mask_weight &= SOM_cuts
 
 w_sim_mask=w_sim_mask[mask_weight]

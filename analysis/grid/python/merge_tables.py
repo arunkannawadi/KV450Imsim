@@ -9,22 +9,22 @@ DirIni=sys.argv[2]
 nameIni=sys.argv[3]
 nameOutput=sys.argv[4]
 
-if not os.path.isfile(DirIni+'/'+nameOutput):
-    print 'Merging master files..'
-    table=[]
-#    for kk in range(num_PSF):
-    for kk in [0,1,2,3,4,13,14,15,16,17]:
-        print "HACK ALERT: Running PSF rotated sets only"
-        if(os.path.isfile(DirIni+'/'+nameIni+'_set_'+str(kk)+'.fits')):
-            print 'PSF ', kk
-            table.append(Table.read(DirIni+'/'+nameIni+'_set_'+str(kk)+'.fits'))
-        else:
-            print 'Cannot find master file for PSF ', kk
-        
-    new=vstack(table)
-    new.write(DirIni+'/'+nameOutput)
-else:
-    print 'Merged file already found.'
+#if not os.path.isfile(DirIni+'/'+nameOutput):
+#    print 'Merging master files..'
+#    table=[]
+##    for kk in range(num_PSF):
+#    for kk in [0,1,2,3,4,13,14,15,16,17]:
+#        print "HACK ALERT: Running PSF rotated sets only"
+#        if(os.path.isfile(DirIni+'/'+nameIni+'_set_'+str(kk)+'.fits')):
+#            print 'PSF ', kk
+#            table.append(Table.read(DirIni+'/'+nameIni+'_set_'+str(kk)+'.fits'))
+#        else:
+#            print 'Cannot find master file for PSF ', kk
+#        
+#    new=vstack(table)
+#    new.write(DirIni+'/'+nameOutput)
+#else:
+#    print 'Merged file already found.'
 
 #Generate tables for each tomographic bin 
 
