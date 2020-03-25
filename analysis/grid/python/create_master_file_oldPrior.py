@@ -39,6 +39,9 @@ w_sim=[]
 size_sim=[]
 fluxradius_sim=[]
 fwhmimage_sim=[]
+x_out_sim=[]
+y_out_sim=[]
+sexflags_sim=[]
 nd_sim=[]
 nm_sim=[]
 fitClass_sim=[]
@@ -132,8 +135,11 @@ for x in range(0,len(list_shear)): #shear values
 		#exit()
             #tbdata_grid = pyfits.getdata(Dir+'/'+str(list_shear[x])+grid_file)
             catSE = np.loadtxt(Dir+'/'+str(list_shear[x])+grid_file)
+            x_SE = catSE[:,0]
+            y_SE = catSE[:,1]
             fluxradius_SE = catSE[:,12]
             fwhmimage_SE = catSE[:,14]
+            sexflags_SE = catSE[:,15]
 
             prior_match=numpy.genfromtxt(Dir+'/'+str(list_shear[x])+grid_file, comments='#')
             prior_match_xpix=prior_match[:,0]
@@ -314,9 +320,12 @@ for x in range(0,len(list_shear)): #shear values
                 psf_Q11_sim.append(PSF_Q11[item[1]])
                 psf_Q22_sim.append(PSF_Q22[item[1]])
                 psf_Q12_sim.append(PSF_Q12[item[1]])
-   
+
+                x_out_sim.append(x_SE[item[1]])
+                y_out_sim.append(y_SE[item[1]])
                 fluxradius_sim.append(fluxradius_SE[item[1]])
                 fwhmimage_sim.append(fwhmimage_SE[item[1]])
+                sexflags_sim.append(sexflags_SE[item[1]])
 
                 fitClass_sim.append(fitclass[item[1]])
                 r_corr_sim.append(rcorr[item[1]])
@@ -341,6 +350,8 @@ g1_in_tmp=array(g1_in)
 g2_in_tmp=array(g2_in)
 fluxradius_sim=array(fluxradius_sim)
 fwhmimage_sim=array(fwhmimage_sim)
+x_out_sim=array(x_out_sim)
+y_out_sim=array(y_out_sim)
 e1_sim=array(e1_sim)
 e2_sim=array(e2_sim)
 strehl_sim=array(strehl_sim)
@@ -362,6 +373,7 @@ psf_Q11_sim=array(psf_Q11_sim)
 psf_Q22_sim=array(psf_Q22_sim)
 psf_Q12_sim=array(psf_Q12_sim)
 nd_sim=array(nd_sim)
+nm_sim=array(nm_sim)
 size_raw_sim=size_sim-r_corr_sim
 ls_var_sim=array(ls_var_sim)
 rot_sim=array(rot_sim)
@@ -369,6 +381,7 @@ ID_sim=array(ID_sim)
 btt_sim=array(btt_sim)
 star_gal_prob_sim=array(star_gal_prob_sim)
 contamination_radius_sim=array(contamination_radius_sim)
+sexflags_sim=array(sexflags_sim)
 
 psf_size_sim=SizeFromMom(psf_Q11_sim,psf_Q22_sim,psf_Q12_sim)
 
@@ -409,8 +422,10 @@ c23pre=pyfits.Column(name='rotation',format='D',array=rot_sim)
 c24pre=pyfits.Column(name='psf_size_in',format='D',array=psf_size_sim)
 c25pre=pyfits.Column(name='psf_e1_in',format='D',array=psf_e1_sim)
 c26pre=pyfits.Column(name='psf_e2_in',format='D',array=psf_e2_sim)
-c27pre=pyfits.Column(name='X_IMAGE',format='D',array=x_in_sim)
-c28pre=pyfits.Column(name='Y_IMAGE',format='D',array=y_in_sim)
+#c27pre=pyfits.Column(name='X_IMAGE',format='D',array=x_in_sim)
+#c28pre=pyfits.Column(name='Y_IMAGE',format='D',array=y_in_sim)
+c27pre=pyfits.Column(name='X_SE',format='D',array=x_out_sim)
+c28pre=pyfits.Column(name='Y_SE',format='D',array=y_out_sim)
 c29pre=pyfits.Column(name='prior_matched',format='D',array=prior_matched)
 c30pre=pyfits.Column(name='ZB9_in',format='D',array=ZB9_sim)
 c31pre=pyfits.Column(name='FLUX_RADIUS',format='D',array=fluxradius_sim)
@@ -418,6 +433,8 @@ c32pre=pyfits.Column(name='FWHM_IMAGE',format='D',array=fwhmimage_sim)
 c33pre=pyfits.Column(name='bulge_fraction',format='D',array=btt_sim)
 c34pre=pyfits.Column(name='star_gal_prob',format='D',array=star_gal_prob_sim)
 c35pre=pyfits.Column(name='contamination_radius',format='D',array=contamination_radius_sim)
-tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre])
+c36pre=pyfits.Column(name='FLAGS',format='J',array=sexflags_sim)
+c37pre=pyfits.Column(name='nm',format='D',array=nm_sim)
+tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre,c36pre,c37pre])
 tbhdu.writeto(binary_filename,clobber=True)
 print "FITS binary before matching  created, proceeding with analysis."
