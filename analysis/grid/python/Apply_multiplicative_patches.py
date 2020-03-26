@@ -101,17 +101,24 @@ nband=sys.argv[4]
 #####Name of the LF reweighting scheme
 ####data_reweight='reweight_5x5x5'
 
+data_type = 'KV450' # KV450/ K1000
 use_old_data = False ## set True to use the catalogues with wrong LF weights and wrong 9-bband ZB
 ## The following catalogue location is for KV450:
-if use_old_data:
-    Dir_KV450='/disks/shear10/hendrik/KV450_CATALOGUES_PATCH_V0.5.9/'  ## these have wrong LF weights and wrong 9-band ZB
-else:
-    Dir_KV450='/disks/shear14/KIDS/KV450_CATALOGUES_PATCH_V0.5.9_GOLD/' ## @Angus: Enter the path to the KV450 GOLD catalogues here
-#Name of the KiDS patches
-patches=['G9', 'G12', 'G15', 'G23', 'GS']
+if data_type=='KV450':
+    if use_old_data:
+        Dir_KV450='/disks/shear10/hendrik/KV450_CATALOGUES_PATCH_V0.5.9/'  ## these have wrong LF weights and wrong 9-band ZB
+    else:
+        Dir_KV450='/disks/shear14/KIDS/KV450_CATALOGUES_PATCH_V0.5.9_GOLD/' ## @Angus: Enter the path to the KV450 GOLD catalogues here
+    #Name of the KiDS patches
+    patches=['G9', 'G12', 'G15', 'G23', 'GS']
+    blinds = ['']
 
-## Toggle comment to compare the catalogues
-#compare_catalogues()
+    ## Toggle comment to compare the catalogues
+    #compare_catalogues()
+else: ## K1000
+    Dir_KV450='/disks/shear14/KiDS/K1000/'
+    patches = ['N','S']
+    blinds = ['_A','_B','_C']
 
 #Looping through the patches
 for xx in range(0,len(patches)):
@@ -121,10 +128,13 @@ for xx in range(0,len(patches)):
         
     #Open the IMSIM catalogue
     #hdulist2 = pyfits.open(Dir_KiDS+'/KiDS_'+patches[xx]+'_'+data_reweight+'_BLIND_PF.cat')
-    if use_old_data:
-        hdulist2 = pyfits.open(Dir_KV450+'KV450_'+patches[xx]+'.cat') ## this is to open the catalogues with wrong LF weights and wrong 9-band ZB
+    if data_type=='KV450':
+        if use_old_data:
+            hdulist2 = pyfits.open(Dir_KV450+'KV450_'+patches[xx]+'.cat') ## this is to open the catalogues with wrong LF weights and wrong 9-band ZB
+        else:
+            hdulist2 = pyfits.open(Dir_KV450+'KV450_'+patches[xx]+'_reweight_3x4x4_v2_good_goldclasses.cat')
     else:
-        hdulist2 = pyfits.open(Dir_KV450+'KV450_'+patches[xx]+'_reweight_3x4x4_v2_good_goldclasses.cat')
+        hdulist2 = pyfits.open(Dir_KV450+'K1000_'+patches[xx]+'_goldclasses.cat')
 
     #tbdata = hdulist2[2].data ## data is in location 2 for KiDS-450
     tbdata = hdulist2[1].data ## data is in location 1 for KV450
@@ -135,9 +145,13 @@ for xx in range(0,len(patches)):
         #data_cuts &= (tbdata['T_B']>1.9)
         tbdata = tbdata[data_cuts]
     else:
-        data_cuts = tbdata['Flag_SOM_speczquality4_NONE']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
+        ## AKJ (Mar 25, 2020) - these cuts shouldn't be in the else block!!! DANGER !!!
+        data_cuts = tbdata['Flag_SOM_Fid']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
         tbdata = tbdata[data_cuts]
 
+    data_cuts = tbdata['Flag_SOM_Fid']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
+    tbdata = tbdata[data_cuts]
+    
     ID=tbdata.SeqNr
     tile=tbdata.THELI_INT
     e1_data_all_A = tbdata.bias_corrected_e1 #.e1_A
