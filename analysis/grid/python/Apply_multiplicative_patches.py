@@ -134,9 +134,9 @@ for xx in range(0,len(patches)):
         data_cuts = ((tbdata['bias_corrected_scalelength_pixels']<tbdata['binary_cut'])|(numpy.hypot(tbdata['bias_corrected_e1'],tbdata['bias_corrected_e2'])<0.8))&(tbdata['GAAP_Flag_ugriZYJHKs']==0)
         #data_cuts &= (tbdata['T_B']>1.9)
         tbdata = tbdata[data_cuts]
-    else:
-        data_cuts = tbdata['Flag_SOM_speczquality4_NONE']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
-        tbdata = tbdata[data_cuts]
+    
+    data_cuts = tbdata['Flag_SOM_speczquality4_NONE']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
+    tbdata = tbdata[data_cuts]
 
     ID=tbdata.SeqNr
     tile=tbdata.THELI_INT
