@@ -2,6 +2,7 @@ import numpy
 from numpy import *
 import pyfits
 import sys
+import optparse
 import scipy 
 from scipy.interpolate import griddata
 #import pdb; pdb.set_trace()
@@ -95,6 +96,14 @@ DirOut=sys.argv[2]
 TomoFlag=int(sys.argv[3])
 nband=sys.argv[4]
 
+argopts = optparse.OptionParser("")
+argopts.add_option("-g", "--goldflag", dest="goldflag",
+                   default=" ",
+                   type="string",
+                   help="Specify the gold flag: Fid, noDEEP2 etc.")
+(options,args) = argopts.parse_args()
+goldflag = options.goldflag
+
 ## The following catalogue location is for KiDS-450:
 #####Location of the KiDS  catalogues
 ####Dir_KiDS='/disks/shear10/KiDS/KiDS-450/SHEAR-PZ-CATALOGUES/'
@@ -146,7 +155,7 @@ for xx in range(0,len(patches)):
         tbdata = tbdata[data_cuts]
     
     ## AKJ (Mar 25, 2020) - these cuts shouldn't be in the else block!!! DANGER !!!
-    data_cuts = tbdata['Flag_SOM_Fid']==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
+    data_cuts = tbdata['Flag_SOM_{}_NONE'.format(goldflag)]==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
     tbdata = tbdata[data_cuts]
     
     ID=tbdata.SeqNr
