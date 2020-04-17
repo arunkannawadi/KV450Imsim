@@ -22,7 +22,7 @@ then
 fi
 
 ##Do the weight bias correction (weight recalibration) at a PSF level
-for PSF in 4
+for PSF in 28 #0 1 2 3 4
 do
     if [ ! "$name_run" == FC17SBmcal ] || [ ! "$name_run" == TSTnewinputmcal ]
     then
@@ -96,20 +96,21 @@ done < $ArchDir/$(echo $name_run)/list_$(echo $name_run).t
 #as well as the input galaxy properties.
 
 echo "Looping over PSFs now ..."
-
-for PSF in 4
+for PSF in 28 #0 1 2 3 #4
 do
     echo MasterCat_$(echo $name_run)_set_$PSF.fits
-    if [ ! -f MasterCat_$(echo $name_run)_set_$PSF.fits ]
-    then
+    #if [ ! -f MasterCat_$(echo $name_run)_set_$PSF.fits ]
+    #then
         echo "Executing the Python script"
-        python2.7 $srcDir/create_master_file_metacal.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
+        echo $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t
+        python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
+        #python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/TSTnewinputDEIMOS/MasterCat_TSTnewinputDEIMOS  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
         if [ ! "$name_run" == FC17 ] && [ ! "$name_run" == FC17SB ] && [ ! "$name_run" == FC17gridmcal ]
         then
             python2.7 $srcDir/propagate_chi2nu.py MasterCat_$(echo $name_run)_set_$PSF.fits ## add reduced chi-square from Griffith catalogue
             python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/assign_ZB.py  $name_run  $PSF ## correct the 9-band ZB in the catalogues from the COSMOS-photoz cat
         fi
-    fi
+    #fi
     python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/assign_ZB.py  $name_run  $PSF ## correct the 9-band ZB in the catalogues from the COSMOS-photoz cat
 done
 

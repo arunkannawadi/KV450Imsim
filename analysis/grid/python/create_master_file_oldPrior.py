@@ -77,7 +77,9 @@ ls_var_sim=[]
 rot_sim=[]
 ZB4_sim=[]
 ZB9_sim=[]
-ID_sim=[]
+OBJNO_sim=[]
+SeqNr_sim=[]
+LRG_sim=[]
 
 cc=0
 
@@ -119,9 +121,6 @@ for x in range(0,len(list_shear)): #shear values
     for y in range(0,4): #rotation
         cc=cc+1
         if((Psf_type == int(Psf)) or run_flag):
-            #tbdata_sim = pyfits.getdata(Dir+'/'+Name_tmp+'_'+str(Psf_type)+'_'+Random_string+'/0'+str(y)+'.output.rot.fits.asc.scheme2b_corr.fits')
-            sim=numpy.genfromtxt(Dir+'/'+Name_tmp+'_'+str(Psf_type)+'_'+Random_string+'/0'+str(y)+'.output.rot.fits.asc.scheme2b_corr', comments='#')
-
             ##MATCHING###
             print 'I am using..', Name_tmp+'_'+str(Psf_type)+'_'+Random_string
             #Checking if LF was working on prior grid or Sextractor catalogue
@@ -141,6 +140,14 @@ for x in range(0,len(list_shear)): #shear values
             fwhmimage_SE = catSE[:,14]
             sexflags_SE = catSE[:,15]
 
+            #tbdata_sim = pyfits.getdata(Dir+'/'+Name_tmp+'_'+str(Psf_type)+'_'+Random_string+'/0'+str(y)+'.output.rot.fits.asc.scheme2b_corr.fits')
+            lf_catname = Dir+'/'+Name_tmp+'_'+str(Psf_type)+'_'+Random_string+'/0'+str(y)+'.output.rot.fits.asc.scheme2b_corr'
+            if os.path.exists(lf_catname):
+                sim=numpy.genfromtxt(lf_catname, comments='#')
+            else:
+                sim=np.ones((len(catSE),30))*np.nan
+                sim[:,26] = catSE[:,6]
+            
             prior_match=numpy.genfromtxt(Dir+'/'+str(list_shear[x])+grid_file, comments='#')
             prior_match_xpix=prior_match[:,0]
             prior_match_ypix=prior_match[:,1]
@@ -179,15 +186,24 @@ for x in range(0,len(list_shear)): #shear values
                     prior_ZB9 = -np.ones(len(prior))
                 ##AKJ: Carry over a unique ID from prior file, if it exists. Else, number them.
                 if prior.shape[1]>10:
-                    prior_ID=prior[:,10]
+                    prior_OBJNO=prior[:,10]
                 else:
-                    prior_ID=np.arange(0,prior.shape[0],1)
+                    prior_OBJNO=np.arange(0,prior.shape[0],1)
             except:
                 print "Didn't find a few columns in the prior. Filling it up with garbage values"
                 prior_N = -np.ones_like(prior_mag)
                 prior_ZB4 = -4*np.ones_like(prior_mag)
                 prior_ZB9 = -9*np.ones_like(prior_mag)
-                prior_ID = 100*np.ones_like(prior_mag)
+                prior_OBJNO = 100*np.ones_like(prior_mag)
+
+            try:
+                prior_SeqNr=prior[:,11]
+            except:
+                prior_SeqNr=np.ones_like(prior_mag)*np.nan
+            try:
+                prior_LRG=prior[:,12]
+            except:
+                prior_LRG=np.ones_like(prior_mag)*np.nan
 
             #prior_xpix=tbdata_prior.X_IMAGE#-1627.71
             #prior_ypix=tbdata_prior.Y_IMAGE#-646.21
@@ -218,7 +234,9 @@ for x in range(0,len(list_shear)): #shear values
             prior_N_Mask=prior_N[maskPrior]
             prior_ZB4_Mask=prior_ZB4[maskPrior]
             prior_ZB9_Mask=prior_ZB9[maskPrior]
-            prior_ID_Mask=prior_ID[maskPrior]
+            prior_OBJNO_Mask=prior_OBJNO[maskPrior]
+            prior_SeqNr_Mask=prior_SeqNr[maskPrior]
+            prior_LRG_Mask=prior_LRG[maskPrior]
             
             #Note: this is the ellipticity for rotation 00!!!!!!!!
             prior_e1_00=prior[:,4]
@@ -296,7 +314,9 @@ for x in range(0,len(list_shear)): #shear values
                 f_in_sim.append(prior_f_Mask[item[0]])
                 ZB4_sim.append(prior_ZB4_Mask[item[0]])
                 ZB9_sim.append(prior_ZB9_Mask[item[0]])
-                ID_sim.append(prior_ID_Mask[item[0]])
+                OBJNO_sim.append(prior_OBJNO_Mask[item[0]])
+                SeqNr_sim.append(prior_SeqNr_Mask[item[0]])
+                LRG_sim.append(prior_LRG_Mask[item[0]])
                 x_in_sim.append(prior_xpix_Mask[item[0]])
                 y_in_sim.append(prior_ypix_Mask[item[0]])
                 #Here now all quantities out of the LF catalogue
@@ -377,7 +397,9 @@ nm_sim=array(nm_sim)
 size_raw_sim=size_sim-r_corr_sim
 ls_var_sim=array(ls_var_sim)
 rot_sim=array(rot_sim)
-ID_sim=array(ID_sim)
+OBJNO_sim=array(OBJNO_sim)
+SeqNr_sim=array(SeqNr_sim)
+LRG_sim=array(LRG_sim)
 btt_sim=array(btt_sim)
 star_gal_prob_sim=array(star_gal_prob_sim)
 contamination_radius_sim=array(contamination_radius_sim)
@@ -411,7 +433,7 @@ c12bpre=pyfits.Column(name='f_in',format='D',array=f_in_sim)
 c13pre=pyfits.Column(name='e1_in',format='D',array=e1_in_sim)
 c14pre=pyfits.Column(name='e2_in',format='D',array=e2_in_sim)
 c15pre=pyfits.Column(name='ZB4_in',format='D',array=ZB4_sim)
-c16pre=pyfits.Column(name='Cat_ID',format='D',array=ID_sim)
+c16pre=pyfits.Column(name='OBJNO',format='D',array=OBJNO_sim)
 c17pre=pyfits.Column(name='size_corr',format='D',array=r_corr_sim)
 c18pre=pyfits.Column(name='e1_corr',format='D',array=e1_corr_sim)
 c19pre=pyfits.Column(name='e2_corr',format='D',array=e2_corr_sim)
@@ -435,6 +457,8 @@ c34pre=pyfits.Column(name='star_gal_prob',format='D',array=star_gal_prob_sim)
 c35pre=pyfits.Column(name='contamination_radius',format='D',array=contamination_radius_sim)
 c36pre=pyfits.Column(name='FLAGS',format='J',array=sexflags_sim)
 c37pre=pyfits.Column(name='nm',format='D',array=nm_sim)
-tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre,c36pre,c37pre])
+c38pre=pyfits.Column(name='SeqNr',format='D',array=SeqNr_sim)
+c39pre=pyfits.Column(name='LRG_flag',format='D',array=LRG_sim)
+tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre,c36pre,c37pre,c38pre,c39pre])
 tbhdu.writeto(binary_filename,clobber=True)
 print "FITS binary before matching  created, proceeding with analysis."
