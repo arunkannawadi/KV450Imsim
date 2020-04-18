@@ -239,7 +239,7 @@ def ComputeBins_1D_weighted(sn, Nbin, weight):
 
     return (sn_quanta)
 
-def ComputeBins_2D(sn, size, Nbin,Dir,ObsType,namePlot):
+def ComputeBins_2D(sn, size, Nbin,Dir,resultsDir,ObsType,namePlot):
     
     #Define the quantiles limits based on the number of bins
 
@@ -290,7 +290,7 @@ def ComputeBins_2D(sn, size, Nbin,Dir,ObsType,namePlot):
             maskBin=((sn>=x_bin[0][x])&(sn<x_bin[0][x+1])&(size>=y_bin[x][y])&(size<y_bin[x][y+1]))
             currentAxis.add_patch(patches.Rectangle((x_bin[0][x], y_bin[x][y]),len_x,len_y,fill=None, alpha=1, color='red', linewidth=3))
 
-    plt.savefig(Dir+'/Results/2bin/'+namePlot)
+    plt.savefig(Dir+'/'+resultsDir+'/2bin/'+namePlot)
     return (x_bin, y_bin)
 
 def ComputeBins_2D_emp(sn, size, Nbin1,Nbin2,Dir,ObsType,namePlot):
@@ -523,7 +523,7 @@ def rotation(e1,e2,e1psf,e2psf):
 
     return [e1_rot,e2_rot]
 
-def DoAll(Observable,ObsBin, obs_sim_weight, w_sim_mask, e1_sim_mask, e2_sim_mask, e1_in_sim_weight, e2_in_sim_weight, e1_corr_sim_weight,e2_corr_sim_weight, g1_in_mask,g2_in_mask, g1_theo, g2_theo, fileOut, Flag, PlotName, ObsLabel,psf_e1_sim_weight,psf_e2_sim_weight,psf_size_sim_weight, Dir,TotWeight,Psf_set,subSet,strehl_set,ending_flag,snr=None,res=None,m1=None,m2=None,c1=None,c2=None,m_func=None,m1_params=None,m2_params=None,c_func=None,c1_params=None,c2_params=None,m1_splines=None,m2_splines=None,c1_splines=None,c2_splines=None,spline_thresholds=None, m1_table=None, m2_table=None, c1_table=None, c2_table=None, x_shift=None, y_shift=None, x_scale=None, y_scale=None, tree=None,table_data=None):
+def DoAll(Observable,ObsBin, obs_sim_weight, w_sim_mask, e1_sim_mask, e2_sim_mask, e1_in_sim_weight, e2_in_sim_weight, e1_corr_sim_weight,e2_corr_sim_weight, g1_in_mask,g2_in_mask, g1_theo, g2_theo, fileOut, Flag, PlotName, ObsLabel,psf_e1_sim_weight,psf_e2_sim_weight,psf_size_sim_weight, Dir,resultsDir, TotWeight,Psf_set,subSet,strehl_set,ending_flag,snr=None,res=None,m1=None,m2=None,c1=None,c2=None,m_func=None,m1_params=None,m2_params=None,c_func=None,c1_params=None,c2_params=None,m1_splines=None,m2_splines=None,c1_splines=None,c2_splines=None,spline_thresholds=None, m1_table=None, m2_table=None, c1_table=None, c2_table=None, x_shift=None, y_shift=None, x_scale=None, y_scale=None, tree=None,table_data=None):
 
     cal=False
     spline_cal=False
@@ -550,59 +550,59 @@ def DoAll(Observable,ObsBin, obs_sim_weight, w_sim_mask, e1_sim_mask, e2_sim_mas
     
     if(ending_flag=='nocorr'):
         if(cal==False):
-            fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.log','wb')
-            fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.dat','wb')
+            fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.log','wb')
+            fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.dat','wb')
         elif(spline_cal==False):
             if(table_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_table_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_table_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_table_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_table_cal.dat','wb')
             elif(bin_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_bin_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_bin_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_bin_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_bin_cal.dat','wb')
             elif(file_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_file_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_file_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_file_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_file_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_cal.dat','wb')
         elif(spline_cal==True):
             if(spline_cal2==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_2spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_2spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_2spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_2spline_cal.dat','wb')
             elif(spline_cal_multi==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_multi_spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_multi_spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_multi_spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_multi_spline_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_spline_cal.dat','wb')
 
     else:
         if(cal==False):
-            fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'.log','wb')
-            fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'.dat','wb')
+            fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'.log','wb')
+            fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'.dat','wb')
         elif(spline_cal==False):
             if(table_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_table_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_table_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_table_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_table_cal.dat','wb')
             elif(bin_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_bin_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_bin_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_bin_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_bin_cal.dat','wb')
             elif(file_cal==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_file_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_file_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_file_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_file_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_cal.log','wb')
+                fOutShear=open(Dir+'resultsDir+/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_cal.dat','wb')
         elif(spline_cal==True):
             if(spline_cal2==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_2spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_2spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_2spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_2spline_cal.dat','wb')
             elif(spline_cal2==True):
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_multi_spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_multi_spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_multi_spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_multi_spline_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_spline_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_spline_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_spline_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_spline_cal.dat','wb')
 
     print >> fOutShear, "#Median bin", "Median strehl", "g1_in","g2_in","g1_out","g2_out","g1_out_nc","g2_out_nc","g1_out_err","g2_out_err","g1_out_err_nc","g2_out_err_nc", "m1", "m2","c1","c2"
     ObsBin_mean=[]
@@ -1119,8 +1119,8 @@ def DoAll(Observable,ObsBin, obs_sim_weight, w_sim_mask, e1_sim_mask, e2_sim_mas
     average_c1_bin=array(average_c1_bin)
     average_c2_bin=array(average_c2_bin)
 
-    print 'I am saving the results here: ', Dir+'/Results/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut
-    fOut=open(Dir+'/Results/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut,'wb')
+    print 'I am saving the results here: ', Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut
+    fOut=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut,'wb')
 
     BinWeight=array(BinWeight)
     if(len(m1_m)>0):
@@ -1170,12 +1170,12 @@ def DoAll(Observable,ObsBin, obs_sim_weight, w_sim_mask, e1_sim_mask, e2_sim_mas
         #plt.legend()
         plt.axhline(0,linewidth=2,color='black')
         plt.tight_layout()
-        plt.savefig(Dir+'/Results/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+PlotName)
+        plt.savefig(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+PlotName)
 
         
     ######################
 
-def DoAll2Bins(Observable,bins, obs1_sim_weight, obs2_sim_weight, mag_in, size_in, mag,  w_sim_mask, e1_sim_mask, e2_sim_mask, e1_in_sim_weight, e2_in_sim_weight, e1_corr_sim_weight,e2_corr_sim_weight, g1_in_mask,g2_in_mask, g1_theo, g2_theo, fileOut, Flag, PlotName, ObsLabel_1, ObsLabel_2,psf_e1_sim_weight,psf_e2_sim_weight,psf_size_sim_weight, Dir,TotWeight,Psf_set,subSet,Nbin,strehl_set,ending_flag,snr=None,res=None,m1=None,m2=None,c1=None,c2=None,m_func=None,m1_params=None,m2_params=None,c_func=None,c1_params=None,c2_params=None,m1_splines=None,m2_splines=None,c1_splines=None,c2_splines=None,spline_thresholds=None, m1_table=None, m2_table=None, c1_table=None, c2_table=None, x_shift=None, y_shift=None, x_scale=None, y_scale=None, tree=None,table_data=None):
+def DoAll2Bins(Observable,bins, obs1_sim_weight, obs2_sim_weight, mag_in, size_in, mag,  w_sim_mask, e1_sim_mask, e2_sim_mask, e1_in_sim_weight, e2_in_sim_weight, e1_corr_sim_weight,e2_corr_sim_weight, g1_in_mask,g2_in_mask, g1_theo, g2_theo, fileOut, Flag, PlotName, ObsLabel_1, ObsLabel_2,psf_e1_sim_weight,psf_e2_sim_weight,psf_size_sim_weight, Dir,resultsDir,TotWeight,Psf_set,subSet,Nbin,strehl_set,ending_flag,snr=None,res=None,m1=None,m2=None,c1=None,c2=None,m_func=None,m1_params=None,m2_params=None,c_func=None,c1_params=None,c2_params=None,m1_splines=None,m2_splines=None,c1_splines=None,c2_splines=None,spline_thresholds=None, m1_table=None, m2_table=None, c1_table=None, c2_table=None, x_shift=None, y_shift=None, x_scale=None, y_scale=None, tree=None,table_data=None):
 
     cal=False
     spline_cal=False
@@ -1203,50 +1203,50 @@ def DoAll2Bins(Observable,bins, obs1_sim_weight, obs2_sim_weight, mag_in, size_i
 
     if(ending_flag=='nocorr'):
         if(cal==False):
-            fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.dat','wb')
+            fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.dat','wb')
         elif(spline_cal==False):
             if(table_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_table_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_table_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_table_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_table_cal.dat','wb')
             elif(bin_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_bin_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_bin_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_bin_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_bin_cal.dat','wb')
             elif(file_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_file_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_file_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_file_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'shear_file_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_cal.dat','wb')
         elif(spline_cal==True):
             if(spline_cal2==True):
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_2spline_cal.dat','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_2spline_cal.dat','wb')
             else:
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_spline_cal.dat','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear_spline_cal.dat','wb')
 
 
     else:
         if(cal==False):
-            fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'.dat','wb')
+            fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'.dat','wb')
         elif(spline_cal==False):
             if(table_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_table_cal.log','wb')
-                fOutShear=open(Dir+'/Results/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_table_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_table_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/1bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_table_cal.dat','wb')
             elif(bin_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_bin_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_bin_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_bin_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_bin_cal.dat','wb')
             elif(file_cal==True):
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_file_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_file_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_file_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_file_cal.dat','wb')
             else:
-                fLog=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_cal.log','wb')
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_cal.dat','wb')
+                fLog=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'.'+ending_flag+'_cal.log','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_cal.dat','wb')
         elif(spline_cal==True):
             if(spline_cal2==True):
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_2spline_cal.dat','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_2spline_cal.dat','wb')
             elif(spline_cal_multi==True):
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_multi_spline_cal.dat','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_multi_spline_cal.dat','wb')
             else:
-                fOutShear=open(Dir+'/Results/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_spline_cal.dat','wb')
+                fOutShear=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+Observable+'_'+str(Psf_set)+'_'+str(subSet)+'_shear.'+ending_flag+'_spline_cal.dat','wb')
 
 
     print >> fOutShear, "#Median bin1", "bin1_lower","bin1_upper",  "Median bin2","bin2_lower","bin2_upper" "Median strehl", "g1_in","g2_in","g1_out","g2_out","g1_out_nc","g2_out_nc","g1_out_err","g2_out_err","g1_out_err_nc","g2_out_err_nc"
@@ -1724,7 +1724,7 @@ def DoAll2Bins(Observable,bins, obs1_sim_weight, obs2_sim_weight, mag_in, size_i
     m2_m_err_nc=array(m2_m_err_nc)
     c2_m_err_nc=array(c2_m_err_nc)
 
-    fOut=open(Dir+'/Results/2bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut,'wb')
+    fOut=open(Dir+'/'+resultsDir+'/2bin/'+Flag+'_'+str(Psf_set)+'_'+str(subSet)+'_'+fileOut,'wb')
 
     BinWeight=array(BinWeight)
     avg_mag_in = array(avg_mag_in)

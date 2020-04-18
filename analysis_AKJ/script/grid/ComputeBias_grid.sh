@@ -38,26 +38,27 @@ do
     #Calculate the surface of doom (in tomographic bins)
     if [ "$TomoFlag" == "Yes" ]
     then
-	for tomo in  1 2 3 4 5
-	do
-#	    if [ ! -f $CatDir/Results/2bin/MV_Tomo4$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
-#	    then
-#		masterFileTomo=MasterCat_Tomo4Bin_$(echo $tomo).fits
-#        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
-#		python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo4$(echo $tomo) > $CatDir/computebias.txt
-#	    fi
+        for goldflag in nogold Fid noDEEP2 noVVDS nozCOSMOS multispec3 speczquality4
+        do
+            for tomo in  1 2 3 4 5
+            do
+        #	    if [ ! -f $CatDir/Results/2bin/MV_Tomo4$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
+        #	    then
+        #		masterFileTomo=MasterCat_Tomo4Bin_$(echo $tomo).fits
+        #        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
+        #		python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo4$(echo $tomo) > $CatDir/computebias.txt
+        #	    fi
 
-	    if [ ! -f $CatDir/Results/2bin/MV_Tomo9$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
-	    then
-		masterFileTomo=MasterCat_Tomo9Bin_$(echo $tomo).fits
-        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
-		python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo9$(echo $tomo) > $CatDir/computebias.txt
-	    fi
-	done
+            if [ ! -f $CatDir/Results_$(echo $goldflag)/2bin/MV_Tomo9$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
+                then
+                masterFileTomo=MasterCat_Tomo9Bin_$(echo $tomo).fits
+                python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF -r Results_$(echo $goldflag)
+                python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo9$(echo $tomo) -g $goldflag -r Results_$(echo $goldflag) > $CatDir/computebias.txt
+                fi
+            done
+        done
     fi
 done
-
-#Calculate the bias
 
 echo "Starting the second loop"
 for PSF in 13
