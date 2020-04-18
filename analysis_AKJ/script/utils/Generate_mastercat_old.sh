@@ -103,7 +103,7 @@ do
     if [ ! -f MasterCat_$(echo $name_run)_set_$PSF.fits ]
     then
         echo "Executing the Python script"
-        python2.7 $srcDir/create_master_file_metacal.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
+        python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
         if [ ! "$name_run" == FC17 ] && [ ! "$name_run" == FC17SB ] && [ ! "$name_run" == FC17gridmcal ]
         then
             python2.7 $srcDir/propagate_chi2nu.py MasterCat_$(echo $name_run)_set_$PSF.fits ## add reduced chi-square from Griffith catalogue

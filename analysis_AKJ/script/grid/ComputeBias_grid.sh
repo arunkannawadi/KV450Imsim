@@ -2,7 +2,9 @@
 
 ###############################################################################
 name_run=$1 # TSTGr0729trueposCHK
+goldflag=$2
 echo "Run ID: " $name_run
+echo "SOM Gold Flag: ", $goldflag
 ###############################################################################
 
 MainDir=/disks/shear15/KiDS/ImSim/analysis/grid/
@@ -31,31 +33,29 @@ do
 #    python2.7 $srcDir/merge_tables.py 13 /disks/shear15/KiDS/ImSim/pipeline/archive/TSTnewinputglobalRecalGOLD MasterCat_$(echo $name_run) MasterCat_$(echo $name_run)_all_13_PSF.fits
 
     #Calculate the surface of doom (no tomographic splitting)
-    if [ ! -f $CatDir/Results/2bin/MV_$(echo $PSF)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
+    if [ ! -f $CatDir/Results_$(echo $goldflag)/2bin/MV_$(echo $PSF)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
     then
-        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFile $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
+        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFile $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF -g $goldflag -r Results_$(echo $goldflag)
     fi
+
     #Calculate the surface of doom (in tomographic bins)
     if [ "$TomoFlag" == "Yes" ]
     then
-        for goldflag in nogold Fid noDEEP2 noVVDS nozCOSMOS multispec3 speczquality4
+        for tomo in  1 2 3 4 5
         do
-            for tomo in  1 2 3 4 5
-            do
-        #	    if [ ! -f $CatDir/Results/2bin/MV_Tomo4$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
-        #	    then
-        #		masterFileTomo=MasterCat_Tomo4Bin_$(echo $tomo).fits
-        #        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF
-        #		python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo4$(echo $tomo) > $CatDir/computebias.txt
-        #	    fi
+    #	    if [ ! -f $CatDir/Results_$(echo $goldflag)/2bin/MV_Tomo4$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
+    #	    then
+    #		masterFileTomo=MasterCat_Tomo4Bin_$(echo $tomo).fits
+    #        python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF -r Results_$(echo $goldflag)
+    #		python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo4$(echo $tomo) -r Results_$(echo $goldflag)> $CatDir/computebias.txt
+    #	    fi
 
-            if [ ! -f $CatDir/Results_$(echo $goldflag)/2bin/MV_Tomo9$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
-                then
-                masterFileTomo=MasterCat_Tomo9Bin_$(echo $tomo).fits
-                python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF -r Results_$(echo $goldflag)
-                python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo9$(echo $tomo) -g $goldflag -r Results_$(echo $goldflag) > $CatDir/computebias.txt
-                fi
-            done
+        if [ ! -f $CatDir/Results_$(echo $goldflag)/2bin/MV_Tomo9$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
+            then
+            masterFileTomo=MasterCat_Tomo9Bin_$(echo $tomo).fits
+            python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func $PSF -r Results_$(echo $goldflag)
+            python2.7 $srcDir/Sim_mc_v0.7.py $CatDir $CatDir/$masterFileTomo $strehl $rotation $Nbin $Nbin2 $cal_type $cal_select $m_func $c_func Tomo9$(echo $tomo) -g $goldflag -r Results_$(echo $goldflag) > $CatDir/computebias.txt
+        fi
         done
     fi
 done
@@ -71,39 +71,39 @@ do
     #if you want to look at residual biases post-calibration
     
     #Add the calibration to the KiDS data
-    if [ ! -f $CatDir/Results/Summary_multiplicative.dat ]
+    if [ ! -f $CatDir/Results_$(echo $goldflag)/Summary_multiplicative.dat ]
     then
 #        echo 'Add standard calibration to the data with 4 band photo-z'
-#        python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results/2bin/$surfaceOfDoom $CatDir/Results/ 0 4 > $CatDir/computebias.txt
+#        python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom $CatDir/Results_$(echo $goldflag)/ 0 4 -g $goldflag > $CatDir/computebias.txt
         echo 'Add standard calibration to the data with 9 band photo-z'
-        python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results/2bin/$surfaceOfDoom $CatDir/Results/ 0 9 > $CatDir/computebias.txt
+        python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom $CatDir/Results_$(echo $goldflag)/ 0 9 -g $goldflag > $CatDir/computebias.txt
     fi
     
     #Add the calibration to the KiDS data (tomographically)
     if [ "$TomoFlag" == "Yes" ]
     then
-#	if [ ! -f $CatDir/Results/Summary_multiplicative_tomo4.dat ]
+    #	if [ ! -f $CatDir/Results_$(echo $goldflag)/Summary_multiplicative_tomo4.dat ]
 #	then
 #	    echo 'Add tomographic calibration to the data'
-#	    python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results/2bin/$surfaceOfDoom $CatDir/Results/ 1 4 > $CatDir/computebias4.txt
-#        python2.7 $srcDir/Money_plot.py $CatDir/Results/ $TomoFlag $CatDir/Results/2bin/$surfaceOfDoom 4 > $CatDir/computebias.txt
+#	    python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom $CatDir/Results_$(echo $goldflag)/ 1 4 -g $goldflag > $CatDir/computebias4.txt
+#        python2.7 $srcDir/Money_plot.py $CatDir/Results_$(echo $goldflag)/ $TomoFlag $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom 4 -g $goldflag > $CatDir/computebias.txt
 #	fi
-	if [ ! -f $CatDir/Results/Summary_multiplicative_tomo9.dat ]
+    if [ ! -f $CatDir/Results_$(echo $goldflag)/Summary_multiplicative_tomo9.dat ]
 	then
 	    echo 'Add tomographic calibration to the data'
-	    python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results/2bin/$surfaceOfDoom $CatDir/Results/ 1 9 > $CatDir/computebias.txt
-        python2.7 $srcDir/Money_plot.py $CatDir/Results/ $TomoFlag $CatDir/Results/2bin/$surfaceOfDoom 9 > $CatDir/computebias.txt 
+        python2.7 $srcDir/Apply_multiplicative_patches.py $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom $CatDir/Results_$(echo $goldflag)/ 1 9 -g $goldflag > $CatDir/computebias.txt
+        python2.7 $srcDir/Money_plot.py $CatDir/Results_$(echo $goldflag)/ $TomoFlag $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom 9 -g $goldflag > $CatDir/computebias.txt 
 	fi
     fi
     #Make summary plot tomographic bins
 
     echo $surfaceOfDoom    
-    python2.7 $srcDir/Money_plot.py $CatDir/Results/ $TomoFlag $CatDir/Results/2bin/$surfaceOfDoom 9 > $CatDir/computebias.txt 
-#    python2.7 $srcDir/Money_plot.py $CatDir $TomoFlag $CatDir/Results/2bin/$surfaceOfDoom 4 > $CatDir/computebias.txt
-#    python2.7 $srcDir/Money_plot.py $CatDir/Results/ "No" $CatDir/Results/2bin/$surfaceOfDoom 9 > $CatDir/computebias.txt 
+    python2.7 $srcDir/Money_plot.py $CatDir/Results_$(echo $goldflag)/ $TomoFlag $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom 9 > $CatDir/computebias.txt 
+#    python2.7 $srcDir/Money_plot.py $CatDir $TomoFlag $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom 4 > $CatDir/computebias.txt
+#    python2.7 $srcDir/Money_plot.py $CatDir/Results_$(echo $goldflag)/ "No" $CatDir/Results_$(echo $goldflag)/2bin/$surfaceOfDoom 9 > $CatDir/computebias.txt 
 
     #Remove catalogues
-#   cd $CatDir/Results
+#   cd $CatDir/Results_$(echo $goldflag)
 #    rm -f *.cat
     
 done
