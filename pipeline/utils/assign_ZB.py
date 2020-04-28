@@ -40,7 +40,7 @@ prior_filename = 'prior'
 #shearIDs = [sID for sID in os.listdir(os.path.join(ARCHDIR,runID.split('/')[0].replace('globalRecal',''))) if sID.count('_')==2 and '.fits' not in sID]
 #print "No. of sub directories = ", len(shearIDs)
 
-all_galaxies_catname = '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars_GOLDonly.cat'
+all_galaxies_catname = '/disks/shear14/KiDS_simulations/Cosmos/KIDS_HST_cat/KiDS_Griffith_iMS1_handpicked_stars_wGOLD.cat'
 all_galaxies_cat = fits.open(all_galaxies_catname)
 all_galaxies_dat = all_galaxies_cat[1].data
 all_cuts =  (all_galaxies_dat['rank']==1)&(all_galaxies_dat['distance2d']<1.)&(all_galaxies_dat['OBJNO']>0) ## Z_B can be assigned only if its there in KiDS and in Griffith
@@ -82,7 +82,7 @@ SOM_flags = [ 'Flag_SOM_Fid_NONE',
 
 
 ## Set the photo-z to -2 if the GAaP flag is set
-#ZB4[cosmos_photoz_dat['GAAP_Flag_ugriZYJHKs'][cosmos_idx]!=0] = -9
+ZB4[cosmos_photoz_dat['GAAP_Flag_ugriZYJHKs'][cosmos_idx]!=0] = -9
 ZB9[cosmos_photoz_dat['GAAP_Flag_ugriZYJHKs'][cosmos_idx]!=0] = -9
 TB4[cosmos_photoz_dat['GAAP_Flag_ugriZYJHKs'][cosmos_idx]!=0] = -9
 TB9[cosmos_photoz_dat['GAAP_Flag_ugriZYJHKs'][cosmos_idx]!=0] = -9
@@ -178,12 +178,18 @@ if not 'SeqNr' in masterCat_data.names:
     new_col = fits.Column(name='SeqNr',format='J',array=new_array_SEQNR)
     new_coldefs = new_hdu.data.columns + new_col
     new_hdu = fits.BinTableHDU.from_columns(new_coldefs)
+else:
+    new_hdu.data['SeqNr'] = new_array_SEQNR
+    new_hdu = fits.BinTableHDU(data=new_hdu.data)
 
 for SOM_colname in SOM_flags:
     if not SOM_colname in masterCat_data.names:
         new_col = fits.Column(name=SOM_colname, format='J',array=new_array_dict[SOM_colname])
         new_coldefs = new_hdu.data.columns + new_col
         new_hdu = fits.BinTableHDU.from_columns(new_coldefs)
+    else:
+        new_hdu.data[SOM_colname] = new_array_dict[SOM_colname]
+        new_hdu = fits.BinTableHDU(data=new_hdu.data)
 
 ## HACK ALERT: Insert high-quality 30-band photo-z / spec-z for 4-band Z_B
 if False:
