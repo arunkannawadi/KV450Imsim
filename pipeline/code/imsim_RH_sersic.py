@@ -303,7 +303,8 @@ def create_imsims(g1,g2,nproc,
                         stamp4 = duplicate_stamps4[int(gal_mag)]
                     else:
                         # Create an original stamp
-                        if not gal_ID==prev_gal_ID:
+                        if ((not gal_ID==prev_gal_ID) or (gal_ID==0)):
+                            ## The gal_ID==0 ensures the condition is True when simulating LRGs from ZEST catalogue
                             try: #AKJ
                                 stamp,stamp2,stamp3,stamp4 = create_gal_stamp(x,y,
                                                                     gal_mag,gal_size,gal_e1,gal_e2,gal_bt,
