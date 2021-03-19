@@ -21,7 +21,7 @@ cal_type=None
 cal_select=snr_res_alt_mv
 m_func='empty'
 c_func='empty'
-TomoFlag=Yes
+TomoFlag=No
 
 cd $CatDir
 
@@ -40,7 +40,7 @@ do
     #Calculate the surface of doom (in tomographic bins)
     if [ "$TomoFlag" == "Yes" ]
     then
-	for tomo in  1 2 3 4 5
+	for tomo in  1 2 3 4 5 6
 	do
 #	    if [ ! -f $CatDir/Results/2bin/MV_Tomo4$(echo $tomo)_100_SignalToNoise_ResolutionAltMV_binning_global.txt ]
 #	    then
