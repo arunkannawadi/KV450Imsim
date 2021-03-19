@@ -1,0 +1,1031 @@
+Created a new list of directories ... 
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+expanding prior file
+done
+Looping over PSFs now ...
+MasterCat_TSTGr0516truepos_set_0.fits
+MasterCat_TSTGr0516truepos_set_1.fits
+MasterCat_TSTGr0516truepos_set_2.fits
+MasterCat_TSTGr0516truepos_set_3.fits
+MasterCat_TSTGr0516truepos_set_4.fits
+MasterCat_TSTGr0516truepos_set_5.fits
+MasterCat_TSTGr0516truepos_set_6.fits
+MasterCat_TSTGr0516truepos_set_7.fits
+MasterCat_TSTGr0516truepos_set_8.fits
+MasterCat_TSTGr0516truepos_set_9.fits
+MasterCat_TSTGr0516truepos_set_10.fits
+Executing the Python script
+Binary FITS files does not exist, creating it.
+m000m400 0 TSTGr0516truepos/
+m000m400 10 TSTGr0516truepos/
+I am using.. m000m400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000m400 11 TSTGr0516truepos/
+m000m400 12 TSTGr0516truepos/
+m000m400 14 TSTGr0516truepos/
+m000m400 15 TSTGr0516truepos/
+m000m400 1 TSTGr0516truepos/
+m000m400 2 TSTGr0516truepos/
+m000m400 3 TSTGr0516truepos/
+m000m400 4 TSTGr0516truepos/
+m000m400 5 TSTGr0516truepos/
+m000m400 6 TSTGr0516truepos/
+m000m400 7 TSTGr0516truepos/
+m000m400 8 TSTGr0516truepos/
+m000m400 9 TSTGr0516truepos/
+m000p400 0 TSTGr0516truepos/
+m000p400 10 TSTGr0516truepos/
+I am using.. m000p400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000p400 11 TSTGr0516truepos/
+m000p400 12 TSTGr0516truepos/
+m000p400 14 TSTGr0516truepos/
+m000p400 15 TSTGr0516truepos/
+m000p400 1 TSTGr0516truepos/
+m000p400 2 TSTGr0516truepos/
+m000p400 3 TSTGr0516truepos/
+m000p400 4 TSTGr0516truepos/
+m000p400 5 TSTGr0516truepos/
+m000p400 6 TSTGr0516truepos/
+m000p400 7 TSTGr0516truepos/
+m000p400 8 TSTGr0516truepos/
+m000p400 9 TSTGr0516truepos/
+m283m283 0 TSTGr0516truepos/
+m283m283 10 TSTGr0516truepos/
+I am using.. m283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283m283 11 TSTGr0516truepos/
+m283m283 12 TSTGr0516truepos/
+m283m283 14 TSTGr0516truepos/
+m283m283 15 TSTGr0516truepos/
+m283m283 1 TSTGr0516truepos/
+m283m283 2 TSTGr0516truepos/
+m283m283 3 TSTGr0516truepos/
+m283m283 4 TSTGr0516truepos/
+m283m283 5 TSTGr0516truepos/
+m283m283 6 TSTGr0516truepos/
+m283m283 7 TSTGr0516truepos/
+m283m283 8 TSTGr0516truepos/
+m283m283 9 TSTGr0516truepos/
+m283p283 0 TSTGr0516truepos/
+m283p283 10 TSTGr0516truepos/
+I am using.. m283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283p283 11 TSTGr0516truepos/
+m283p283 12 TSTGr0516truepos/
+m283p283 14 TSTGr0516truepos/
+m283p283 1 TSTGr0516truepos/
+m283p283 2 TSTGr0516truepos/
+m283p283 3 TSTGr0516truepos/
+m283p283 4 TSTGr0516truepos/
+m283p283 5 TSTGr0516truepos/
+m283p283 6 TSTGr0516truepos/
+m283p283 7 TSTGr0516truepos/
+m283p283 8 TSTGr0516truepos/
+m283p283 9 TSTGr0516truepos/
+m400m000 0 TSTGr0516truepos/
+m400m000 10 TSTGr0516truepos/
+I am using.. m400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m400m000 11 TSTGr0516truepos/
+m400m000 12 TSTGr0516truepos/
+m400m000 14 TSTGr0516truepos/
+m400m000 15 TSTGr0516truepos/
+m400m000 1 TSTGr0516truepos/
+m400m000 2 TSTGr0516truepos/
+m400m000 3 TSTGr0516truepos/
+m400m000 4 TSTGr0516truepos/
+m400m000 5 TSTGr0516truepos/
+m400m000 6 TSTGr0516truepos/
+m400m000 7 TSTGr0516truepos/
+m400m000 8 TSTGr0516truepos/
+m400m000 9 TSTGr0516truepos/
+p283m283 0 TSTGr0516truepos/
+p283m283 10 TSTGr0516truepos/
+I am using.. p283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283m283 11 TSTGr0516truepos/
+p283m283 12 TSTGr0516truepos/
+p283m283 14 TSTGr0516truepos/
+p283m283 1 TSTGr0516truepos/
+p283m283 2 TSTGr0516truepos/
+p283m283 3 TSTGr0516truepos/
+p283m283 4 TSTGr0516truepos/
+p283m283 5 TSTGr0516truepos/
+p283m283 6 TSTGr0516truepos/
+p283m283 7 TSTGr0516truepos/
+p283m283 8 TSTGr0516truepos/
+p283m283 9 TSTGr0516truepos/
+p283p283 0 TSTGr0516truepos/
+p283p283 10 TSTGr0516truepos/
+I am using.. p283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283p283 11 TSTGr0516truepos/
+p283p283 12 TSTGr0516truepos/
+p283p283 13 TSTGr0516truepos/
+p283p283 14 TSTGr0516truepos/
+p283p283 15 TSTGr0516truepos/
+p283p283 1 TSTGr0516truepos/
+p283p283 2 TSTGr0516truepos/
+p283p283 3 TSTGr0516truepos/
+p283p283 4 TSTGr0516truepos/
+p283p283 5 TSTGr0516truepos/
+p283p283 6 TSTGr0516truepos/
+p283p283 7 TSTGr0516truepos/
+p283p283 8 TSTGr0516truepos/
+p283p283 9 TSTGr0516truepos/
+p400m000 0 TSTGr0516truepos/
+p400m000 10 TSTGr0516truepos/
+I am using.. p400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_10_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p400m000 11 TSTGr0516truepos/
+p400m000 12 TSTGr0516truepos/
+p400m000 13 TSTGr0516truepos/
+p400m000 14 TSTGr0516truepos/
+p400m000 15 TSTGr0516truepos/
+p400m000 1 TSTGr0516truepos/
+p400m000 2 TSTGr0516truepos/
+p400m000 3 TSTGr0516truepos/
+p400m000 4 TSTGr0516truepos/
+p400m000 5 TSTGr0516truepos/
+p400m000 6 TSTGr0516truepos/
+p400m000 7 TSTGr0516truepos/
+p400m000 8 TSTGr0516truepos/
+p400m000 9 TSTGr0516truepos/
+Writing FITS binary file before cuts
+FITS binary before matching  created, proceeding with analysis.
+MasterCat_TSTGr0516truepos_set_11.fits
+Executing the Python script
+Binary FITS files does not exist, creating it.
+m000m400 0 TSTGr0516truepos/
+m000m400 10 TSTGr0516truepos/
+m000m400 11 TSTGr0516truepos/
+I am using.. m000m400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000m400 12 TSTGr0516truepos/
+m000m400 14 TSTGr0516truepos/
+m000m400 15 TSTGr0516truepos/
+m000m400 1 TSTGr0516truepos/
+m000m400 2 TSTGr0516truepos/
+m000m400 3 TSTGr0516truepos/
+m000m400 4 TSTGr0516truepos/
+m000m400 5 TSTGr0516truepos/
+m000m400 6 TSTGr0516truepos/
+m000m400 7 TSTGr0516truepos/
+m000m400 8 TSTGr0516truepos/
+m000m400 9 TSTGr0516truepos/
+m000p400 0 TSTGr0516truepos/
+m000p400 10 TSTGr0516truepos/
+m000p400 11 TSTGr0516truepos/
+I am using.. m000p400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000p400 12 TSTGr0516truepos/
+m000p400 14 TSTGr0516truepos/
+m000p400 15 TSTGr0516truepos/
+m000p400 1 TSTGr0516truepos/
+m000p400 2 TSTGr0516truepos/
+m000p400 3 TSTGr0516truepos/
+m000p400 4 TSTGr0516truepos/
+m000p400 5 TSTGr0516truepos/
+m000p400 6 TSTGr0516truepos/
+m000p400 7 TSTGr0516truepos/
+m000p400 8 TSTGr0516truepos/
+m000p400 9 TSTGr0516truepos/
+m283m283 0 TSTGr0516truepos/
+m283m283 10 TSTGr0516truepos/
+m283m283 11 TSTGr0516truepos/
+I am using.. m283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283m283 12 TSTGr0516truepos/
+m283m283 14 TSTGr0516truepos/
+m283m283 15 TSTGr0516truepos/
+m283m283 1 TSTGr0516truepos/
+m283m283 2 TSTGr0516truepos/
+m283m283 3 TSTGr0516truepos/
+m283m283 4 TSTGr0516truepos/
+m283m283 5 TSTGr0516truepos/
+m283m283 6 TSTGr0516truepos/
+m283m283 7 TSTGr0516truepos/
+m283m283 8 TSTGr0516truepos/
+m283m283 9 TSTGr0516truepos/
+m283p283 0 TSTGr0516truepos/
+m283p283 10 TSTGr0516truepos/
+m283p283 11 TSTGr0516truepos/
+I am using.. m283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283p283 12 TSTGr0516truepos/
+m283p283 14 TSTGr0516truepos/
+m283p283 1 TSTGr0516truepos/
+m283p283 2 TSTGr0516truepos/
+m283p283 3 TSTGr0516truepos/
+m283p283 4 TSTGr0516truepos/
+m283p283 5 TSTGr0516truepos/
+m283p283 6 TSTGr0516truepos/
+m283p283 7 TSTGr0516truepos/
+m283p283 8 TSTGr0516truepos/
+m283p283 9 TSTGr0516truepos/
+m400m000 0 TSTGr0516truepos/
+m400m000 10 TSTGr0516truepos/
+m400m000 11 TSTGr0516truepos/
+I am using.. m400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m400m000 12 TSTGr0516truepos/
+m400m000 14 TSTGr0516truepos/
+m400m000 15 TSTGr0516truepos/
+m400m000 1 TSTGr0516truepos/
+m400m000 2 TSTGr0516truepos/
+m400m000 3 TSTGr0516truepos/
+m400m000 4 TSTGr0516truepos/
+m400m000 5 TSTGr0516truepos/
+m400m000 6 TSTGr0516truepos/
+m400m000 7 TSTGr0516truepos/
+m400m000 8 TSTGr0516truepos/
+m400m000 9 TSTGr0516truepos/
+p283m283 0 TSTGr0516truepos/
+p283m283 10 TSTGr0516truepos/
+p283m283 11 TSTGr0516truepos/
+I am using.. p283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283m283 12 TSTGr0516truepos/
+p283m283 14 TSTGr0516truepos/
+p283m283 1 TSTGr0516truepos/
+p283m283 2 TSTGr0516truepos/
+p283m283 3 TSTGr0516truepos/
+p283m283 4 TSTGr0516truepos/
+p283m283 5 TSTGr0516truepos/
+p283m283 6 TSTGr0516truepos/
+p283m283 7 TSTGr0516truepos/
+p283m283 8 TSTGr0516truepos/
+p283m283 9 TSTGr0516truepos/
+p283p283 0 TSTGr0516truepos/
+p283p283 10 TSTGr0516truepos/
+p283p283 11 TSTGr0516truepos/
+I am using.. p283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283p283 12 TSTGr0516truepos/
+p283p283 13 TSTGr0516truepos/
+p283p283 14 TSTGr0516truepos/
+p283p283 15 TSTGr0516truepos/
+p283p283 1 TSTGr0516truepos/
+p283p283 2 TSTGr0516truepos/
+p283p283 3 TSTGr0516truepos/
+p283p283 4 TSTGr0516truepos/
+p283p283 5 TSTGr0516truepos/
+p283p283 6 TSTGr0516truepos/
+p283p283 7 TSTGr0516truepos/
+p283p283 8 TSTGr0516truepos/
+p283p283 9 TSTGr0516truepos/
+p400m000 0 TSTGr0516truepos/
+p400m000 10 TSTGr0516truepos/
+p400m000 11 TSTGr0516truepos/
+I am using.. p400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_11_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p400m000 12 TSTGr0516truepos/
+p400m000 13 TSTGr0516truepos/
+p400m000 14 TSTGr0516truepos/
+p400m000 15 TSTGr0516truepos/
+p400m000 1 TSTGr0516truepos/
+p400m000 2 TSTGr0516truepos/
+p400m000 3 TSTGr0516truepos/
+p400m000 4 TSTGr0516truepos/
+p400m000 5 TSTGr0516truepos/
+p400m000 6 TSTGr0516truepos/
+p400m000 7 TSTGr0516truepos/
+p400m000 8 TSTGr0516truepos/
+p400m000 9 TSTGr0516truepos/
+Writing FITS binary file before cuts
+FITS binary before matching  created, proceeding with analysis.
+MasterCat_TSTGr0516truepos_set_12.fits
+Executing the Python script
+Binary FITS files does not exist, creating it.
+m000m400 0 TSTGr0516truepos/
+m000m400 10 TSTGr0516truepos/
+m000m400 11 TSTGr0516truepos/
+m000m400 12 TSTGr0516truepos/
+I am using.. m000m400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000m400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000m400 14 TSTGr0516truepos/
+m000m400 15 TSTGr0516truepos/
+m000m400 1 TSTGr0516truepos/
+m000m400 2 TSTGr0516truepos/
+m000m400 3 TSTGr0516truepos/
+m000m400 4 TSTGr0516truepos/
+m000m400 5 TSTGr0516truepos/
+m000m400 6 TSTGr0516truepos/
+m000m400 7 TSTGr0516truepos/
+m000m400 8 TSTGr0516truepos/
+m000m400 9 TSTGr0516truepos/
+m000p400 0 TSTGr0516truepos/
+m000p400 10 TSTGr0516truepos/
+m000p400 11 TSTGr0516truepos/
+m000p400 12 TSTGr0516truepos/
+I am using.. m000p400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m000p400_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m000p400 14 TSTGr0516truepos/
+m000p400 15 TSTGr0516truepos/
+m000p400 1 TSTGr0516truepos/
+m000p400 2 TSTGr0516truepos/
+m000p400 3 TSTGr0516truepos/
+m000p400 4 TSTGr0516truepos/
+m000p400 5 TSTGr0516truepos/
+m000p400 6 TSTGr0516truepos/
+m000p400 7 TSTGr0516truepos/
+m000p400 8 TSTGr0516truepos/
+m000p400 9 TSTGr0516truepos/
+m283m283 0 TSTGr0516truepos/
+m283m283 10 TSTGr0516truepos/
+m283m283 11 TSTGr0516truepos/
+m283m283 12 TSTGr0516truepos/
+I am using.. m283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283m283 14 TSTGr0516truepos/
+m283m283 15 TSTGr0516truepos/
+m283m283 1 TSTGr0516truepos/
+m283m283 2 TSTGr0516truepos/
+m283m283 3 TSTGr0516truepos/
+m283m283 4 TSTGr0516truepos/
+m283m283 5 TSTGr0516truepos/
+m283m283 6 TSTGr0516truepos/
+m283m283 7 TSTGr0516truepos/
+m283m283 8 TSTGr0516truepos/
+m283m283 9 TSTGr0516truepos/
+m283p283 0 TSTGr0516truepos/
+m283p283 10 TSTGr0516truepos/
+m283p283 11 TSTGr0516truepos/
+m283p283 12 TSTGr0516truepos/
+I am using.. m283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m283p283 14 TSTGr0516truepos/
+m283p283 1 TSTGr0516truepos/
+m283p283 2 TSTGr0516truepos/
+m283p283 3 TSTGr0516truepos/
+m283p283 4 TSTGr0516truepos/
+m283p283 5 TSTGr0516truepos/
+m283p283 6 TSTGr0516truepos/
+m283p283 7 TSTGr0516truepos/
+m283p283 8 TSTGr0516truepos/
+m283p283 9 TSTGr0516truepos/
+m400m000 0 TSTGr0516truepos/
+m400m000 10 TSTGr0516truepos/
+m400m000 11 TSTGr0516truepos/
+m400m000 12 TSTGr0516truepos/
+I am using.. m400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. m400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+m400m000 14 TSTGr0516truepos/
+m400m000 15 TSTGr0516truepos/
+m400m000 1 TSTGr0516truepos/
+m400m000 2 TSTGr0516truepos/
+m400m000 3 TSTGr0516truepos/
+m400m000 4 TSTGr0516truepos/
+m400m000 5 TSTGr0516truepos/
+m400m000 6 TSTGr0516truepos/
+m400m000 7 TSTGr0516truepos/
+m400m000 8 TSTGr0516truepos/
+m400m000 9 TSTGr0516truepos/
+p283m283 0 TSTGr0516truepos/
+p283m283 10 TSTGr0516truepos/
+p283m283 11 TSTGr0516truepos/
+p283m283 12 TSTGr0516truepos/
+I am using.. p283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283m283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283m283 14 TSTGr0516truepos/
+p283m283 1 TSTGr0516truepos/
+p283m283 2 TSTGr0516truepos/
+p283m283 3 TSTGr0516truepos/
+p283m283 4 TSTGr0516truepos/
+p283m283 5 TSTGr0516truepos/
+p283m283 6 TSTGr0516truepos/
+p283m283 7 TSTGr0516truepos/
+p283m283 8 TSTGr0516truepos/
+p283m283 9 TSTGr0516truepos/
+p283p283 0 TSTGr0516truepos/
+p283p283 10 TSTGr0516truepos/
+p283p283 11 TSTGr0516truepos/
+p283p283 12 TSTGr0516truepos/
+I am using.. p283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p283p283_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p283p283 13 TSTGr0516truepos/
+p283p283 14 TSTGr0516truepos/
+p283p283 15 TSTGr0516truepos/
+p283p283 1 TSTGr0516truepos/
+p283p283 2 TSTGr0516truepos/
+p283p283 3 TSTGr0516truepos/
+p283p283 4 TSTGr0516truepos/
+p283p283 5 TSTGr0516truepos/
+p283p283 6 TSTGr0516truepos/
+p283p283 7 TSTGr0516truepos/
+p283p283 8 TSTGr0516truepos/
+p283p283 9 TSTGr0516truepos/
+p400m000 0 TSTGr0516truepos/
+p400m000 10 TSTGr0516truepos/
+p400m000 11 TSTGr0516truepos/
+p400m000 12 TSTGr0516truepos/
+I am using.. p400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+I am using.. p400m000_12_TSTGr0516truepos/
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/
+Reading:  /disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos//prior
+looping...
+p400m000 13 TSTGr0516truepos/
+p400m000 14 TSTGr0516truepos/
+p400m000 15 TSTGr0516truepos/
+p400m000 1 TSTGr0516truepos/
+p400m000 2 TSTGr0516truepos/
+p400m000 3 TSTGr0516truepos/
+p400m000 4 TSTGr0516truepos/
+p400m000 5 TSTGr0516truepos/
+p400m000 6 TSTGr0516truepos/
+p400m000 7 TSTGr0516truepos/
+p400m000 8 TSTGr0516truepos/
+p400m000 9 TSTGr0516truepos/
+Writing FITS binary file before cuts
+FITS binary before matching  created, proceeding with analysis.
+Number of PSF sets =  13
+Merging master files..
+PSF  0
+PSF  1
+PSF  2
+PSF  3
+PSF  4
+PSF  5
+PSF  6
+PSF  7
+PSF  8
+PSF  9
+PSF  10
+PSF  11
+PSF  12
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/ 0
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/ 1
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/ 2
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/ 3
+/disks/shear15/KiDS/ImSim/pipeline/archive/TSTGr0516truepos/ 4

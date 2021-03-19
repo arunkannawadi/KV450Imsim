@@ -1,24 +1,22 @@
-__author__ = 'Ian Fenech Conti, Arun Kannawadi'
+__author__ = 'Ian Fenech Conti'
 
 """
 KiDS Image Simulations.
 -----------------------
 
-Version         0.2.8
+Version         0.2.7
 Description     KiDS Image Simulations Pipeline.
 Developed by    Ian Fenech Conti (University of Malta)
                 Ricardo Herbonnet (Univeristy of Leiden)
-                Arun Kannawadi (University of Leiden)
 Developed on    Monday 8th June 2015
-Modified on     Wednesday 26th April 2017
-Contact         ianfc89@gmail.com, arunkannawdi@strw.leidenuniv.nl
+Contact         ianfc89@gmail.com
 
 """
 
 '''
 Imports.
 '''
-#import pdb; pdb.set_trace() # Do not have parallelization on. Do not run from a script
+
 import numpy as np
 import math
 import pyfits
@@ -31,9 +29,9 @@ import os
 import string
 import random
 import optparse
-import priors_fixed_psf2 as imsimpriors
+import priors_fixed_psf2_170324 as imsimpriors
 # import rewrite_prior
-import imsim as imsim
+import imsim_170324 as imsim
 import time
 import sys
 import shutil
@@ -46,7 +44,6 @@ import socket
 warnings.simplefilter("ignore")
 from astropy.io import fits
 from os.path import basename
-from multiprocessing import Pool, Process, Queue
 
 '''
 Global Params.
@@ -85,15 +82,14 @@ are defined at in the catalog file.
 '''
 def extractDithers():
     print '      Extracting Dither Information';sys.stdout.flush()
-    path = '%s/%s' % (ARCHDIR, 'ditherArray.txt')
-    ditherArray = np.loadtxt(path, usecols=(1,2))
-    #exposures = int(parser.get('chipping','n_exposures'))
-    #ditherArray = np.zeros((exposures, 2))
-    #startIndex = 1
-    #for exposure in xrange(0, exposures):
-        #dither = readLineAtIndex(path, exposure + startIndex)
-        #ditherArray[exposure, 0] = float(dither.split(':')[1].split()[0])
-        #ditherArray[exposure, 1] = float(dither.split(':')[1].split()[1])
+    path = '%s/%s' % (ARCHDIR, parser.get('priors','prior_catalog'))
+    exposures = int(parser.get('chipping','n_exposures'))
+    ditherArray = np.zeros((exposures, 2))
+    startIndex = 1
+    for exposure in xrange(0, exposures):
+        dither = readLineAtIndex(path, exposure + startIndex)
+        ditherArray[exposure, 0] = float(dither.split(':')[1].split()[0])
+        ditherArray[exposure, 1] = float(dither.split(':')[1].split()[1])
     return ditherArray
 
 '''
@@ -116,56 +112,21 @@ def saveData(data, header, path):
     hdulist[0].header = header
     hdulist.writeto(path, clobber=True)
     hdulist.close()
-    
-    
-'''
-Chip Exposures
-'''
-def ChipExposures(TMPDIR, ditherArray, rot_id):
-    if rot_id==0:
-        # Chip nominal the nominal image.
-        for nExp in range(0, int(parser.get('chipping', 'n_exposures'))):
-            image = loadData('%s%s/exp%d.fits' % (TMPDIR, parser.get('directories', 'exp_directory'), nExp))
-
-            chipImage(image,
-                      int(parser.get('chipping', 'chips_x')),
-                      int(parser.get('chipping', 'chips_y')),
-                      int(parser.get('chipping', 'chip_x_dim')),
-                      int(parser.get('chipping', 'chip_y_dim')),
-                      float(parser.get('chipping', 'chip_gap')),
-                      ditherArray,
-                      nExp,
-                      isRotated=False,
-                      rotationNumber=0,
-                      TMPDIR=TMPDIR)
-
-    else:
-        # Chip rotated images.         
-        for nExp in range(0, int(parser.get('chipping', 'n_exposures'))):
-            # Load the nominal image.
-            image = loadData('%s%s/exp%d_rot%02d.fits' % (TMPDIR, parser.get('directories', 'exp_directory'), nExp, rot_id))
-            chipImage(image,
-                      int(parser.get('chipping', 'chips_x')),
-                      int(parser.get('chipping', 'chips_y')),
-                      int(parser.get('chipping', 'chip_x_dim')),
-                      int(parser.get('chipping', 'chip_y_dim')),
-                      float(parser.get('chipping', 'chip_gap')),
-                      ditherArray,
-                      nExp,
-                      isRotated=True,
-                      rotationNumber=rot_id,
-                      TMPDIR=TMPDIR)
 
 '''
 Chip Image. Given an image and a set of dither values,
 this function creates a set of M,N Chips defined on a size
 with a specific chip gap.
 '''
-def chipImage(imageData, chipX, chipY, chipDimX, chipDimY, chipGap, ditherArray, exposure, isRotated = False, rotationNumber = 0, TMPDIR=None):
+def chipImage(imageData, chipX, chipY, chipDimX, chipDimY, chipGap, ditherArray, exposure, parser, tmpDir, isRotated = False, rotationNumber = 0):
     # print '      Chipping Image ID = %d (isRotated : %s)' % (exposure, isRotated);sys.stdout.flush()
 
     # Set the initalise the chip id.
     chipID = 1
+
+    # Set up the temporary directory.
+    global TMPDIR
+    TMPDIR= tmpDir
 
     # Begin the chipping process.
     for yIndex in xrange(0, chipY):
@@ -207,7 +168,7 @@ def chipImage(imageData, chipX, chipY, chipDimX, chipDimY, chipGap, ditherArray,
 '''
 Prepare the list of chip names for lensift input.
 '''
-def prepareInputFile(CHIPNAMES):
+def prepareInputFile():
 
     # Begin the file naming process.
     for exposure in xrange(0, int(parser.get('chipping','n_exposures'))):
@@ -220,8 +181,6 @@ def prepareInputFile(CHIPNAMES):
                 CHIPNAMES.append(chipName)
                 # Increment the chipID.
                 chipID += 1
-
-    return CHIPNAMES
 
 '''
 Extract Chip. Extract's the data of a given exposure into a
@@ -347,7 +306,7 @@ containing a list of all the chip names.
 @chipNames : a list with each of the elements corresponding
 to the LensfitFormat name specification.
 '''
-def createInputFile(TMPDIR, CHIPNAMES):
+def createInputFile():
     print '      Creating LensFIT Input File';sys.stdout.flush()
     f = open('%s%s' % (TMPDIR, parser.get('lensfit','input_file')), 'w')
     for chipName in CHIPNAMES:
@@ -358,18 +317,15 @@ def createInputFile(TMPDIR, CHIPNAMES):
 Prepares the LensFIT type asci catalog. With rows
 corresponding to.
 '''
-def createLensFITCatalog(TMPDIR, rot_id=0):
+def createLensFITCatalog():
     print '      Creating LensFIT Catalog'
-
-    if rot_id==0:
-        sextractorCatalog = '%s%s' % (TMPDIR, parser.get('sextractor','cataloge_path'))
-        outputPath = '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog'))
-    else:
-        sextractorCatalog = '%s%s%02d%s' % (TMPDIR, 'sexrot', rot_id, '.cat')
-        outputPath = TMPDIR+'catalog_rot0{0}.asc'.format(rot_id) # A HACK FOR NOW
-    data = pyfits.getdata(sextractorCatalog)
-    reduced_data = np.array([data['X_WORLD'], data['Y_WORLD'], data['MAG_AUTO'], data['NUMBER']]).T
-    np.savetxt(outputPath, reduced_data)
+    sextractorCatalog = '%s%s' % (TMPDIR, parser.get('sextractor','cataloge_path'))
+    outputPath = '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog'))
+    data = np.loadtxt(sextractorCatalog)
+    f = open(outputPath, 'w')
+    for row in data:
+        f.write('%f %f %f %f \n' % (row[2], row[3], row[6], row[13]))
+    f.close()
 
 '''
 Prepares the LensFIT type asci catalog. Generated
@@ -433,18 +389,13 @@ def createLensFITCatalogXYSKY(pathPriorFitsFile, pathCatalog, pathMatchFile):
 Call LensFIT using subprocess command, set all the
 relevant environement variables and pass the relevant args.
 '''
-def flensfit(TMPDIR, ARCHDIR, isRotated = False, rotationNumber = 0):
+def flensfit(isRotated = False, rotationNumber = 0):
     print '      Running LensFIT (isRotated : %s, rotationNumber : %02d)' % (isRotated, rotationNumber), ;sys.stdout.flush()
     lensfitPath = parser.get('lensfit','lensfit_path')
     startTime = time.time()
     envVars = os.environ.copy()
     envVars['SWARP_CONFIG'] = parser.get('lensfit','swarp_path')
-    if rotationNumber==0:
-        CATALOGUE_GALAXIES = '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog'))
-    else:
-        CATALOGUE_GALAXIES = TMPDIR+'catalog_rot0{0}.asc'.format(rotationNumber) # A HACK FOR NOW
-    envVars['CATALOGUE_GALAXIES'] = CATALOGUE_GALAXIES
-
+    envVars['CATALOGUE_GALAXIES'] = '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog'))
     envVars['PSF_DIR'] = '%s%s/' % (TMPDIR, parser.get('directories','psf_directory'))
     envVars['HEAD_DIR'] = '%s%s/' % (TMPDIR, parser.get('directories','head_directory'))
     envVars['PSF_OVERSAMPLING'] = parser.get('lensfit','psf_oversampling')
@@ -509,13 +460,11 @@ def convertPSF(exposure):
 Call Swarp using subprocess command, configure the correct
 params file depending on a weight file coadd or a chip file coadd.
 '''
-def swarpChips(TMPDIR, isWeights = False, chip_rot_name='chip', rot_number=0):
+def swarpChips(isWeights = False, chip_rot_name='chip'):
     print '      Running SWarp (isWeights : %s)' % isWeights, ;sys.stdout.flush()
-    print ' TMPDIR = ', TMPDIR; sys.stdout.flush()
     startTime = time.time()
     processPath = parser.get('swarp','swarp_path')
     if isWeights:
-      if rot_number==0:
         workingDirectory = '%s%s/' % (TMPDIR, parser.get('directories','weight_directory'))
         paramPath = parser.get('swarp','weights_param')
         imagePath = '%s%s/%s' % (TMPDIR, parser.get('directories','weight_directory'), parser.get('swarp','weights_wildcard'))
@@ -523,8 +472,6 @@ def swarpChips(TMPDIR, isWeights = False, chip_rot_name='chip', rot_number=0):
         ''' Saves the useless output weights file '''
         swarpWeightPath = '%s%s/%s.weight' % (TMPDIR, parser.get('directories','weight_directory'), parser.get('swarp','weights_save'))
     else:
-        if rot_number > 0:
-            chip_rot_name = chip_rot_name + 'rot0' + str(rot_number)
         workingDirectory = '%s%s/' % (TMPDIR, chip_rot_name)
         paramPath = parser.get('swarp','chips_param')
         imagePath = '%s%s/%s' % (TMPDIR, chip_rot_name, parser.get('swarp','chips_wildcard'))
@@ -543,9 +490,7 @@ def swarpChips(TMPDIR, isWeights = False, chip_rot_name='chip', rot_number=0):
 Call SExtractor using subprocess command, configure
 the right paramaters file and input args.
 '''
-def sextractorPositions(TMPDIR, ARCHDIR, chip_rot_name='chip', rot_number=0):
-    if rot_number > 0:
-        chip_rot_name = chip_rot_name + 'rot0' + str(rot_number)
+def sextractorPositions(chip_rot_name='chip', rot_number='00'):
     print '      Running SEXtractor',;sys.stdout.flush()
     startTime = time.time()
     processPath = parser.get('sextractor','sextractor_path')
@@ -553,10 +498,7 @@ def sextractorPositions(TMPDIR, ARCHDIR, chip_rot_name='chip', rot_number=0):
     weightingPath ='%s%s/%s' % (TMPDIR, parser.get('directories','weight_directory'), parser.get('swarp','weights_save'))
     paramsPath = parser.get('sextractor','sex_param')
     configPath = parser.get('sextractor','sex_config')
-    if rot_number==0:
-        catalogPath = '%s%s' % (TMPDIR, parser.get('sextractor','cataloge_path'))
-    else:
-        catalogPath = '%s%s%02d%s' % (TMPDIR, 'sexrot',rot_number,'.cat') # A HACK FOR NOW
+    catalogPath = '%s%s' % (TMPDIR, parser.get('sextractor','cataloge_path'))
     catalogPathArchive = '%s/%s' % (ARCHDIR, parser.get('sextractor','cataloge_path'))
     workingDirectory = parser.get('directories','config_directory')
 
@@ -576,69 +518,6 @@ def sextractorPositions(TMPDIR, ARCHDIR, chip_rot_name='chip', rot_number=0):
     shutil.copy(catalogPath, catalogPathArchive)
     print ' [%s]' % (str(datetime.timedelta(seconds=(time.time()-startTime))))
 
-'''
-Temp Directory Structure. The IMSIM Pipeline will create
-a set of directories and subdirectories in order to handle
-with the data creation. These will be removed once done.
-'''
-def createWorkFolder(g1, g2, psfSet, randomKey=None):
-    print '      Creating Temp. Directories';sys.stdout.flush()
-
-    # Load the Root Directory from the parser.
-    rootDirectory = parser.get('directories','root_directory')
-
-    if randomKey is None:
-        # Define a unique random key for a run.
-        randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
-
-    # Add shear information.
-    g1Part = ''
-    if g1 > 0:
-        g1Part += 'p'
-    else:
-        g1Part += 'm'
-    g1Part += '%03d' % abs((g1*10000.1))
-    g2Part = ''
-    if g2 > 0:
-        g2Part += 'p'
-    else:
-        g2Part += 'm'
-    g2Part += '%03d' % abs((g2*10000.1))
-
-    # Set up the RUNID.
-    runID = '%s%s_%s_%s' % (g1Part, g2Part, psfSet, randomKey)
-
-    # Create the sub-directories.
-    TMPDIR = '%s%s/%s/' % (rootDirectory, randomKey, runID)
-    chipDir = '%s%s' % (TMPDIR, parser.get('directories','chip_directory'))
-    headDir = '%s%s' % (TMPDIR, parser.get('directories','head_directory'))
-    psfDir = '%s%s' % (TMPDIR, parser.get('directories','psf_directory'))
-    weightsDir = '%s%s' % (TMPDIR, parser.get('directories','weight_directory'))
-    galsimPSFDir = '%s%s' % (TMPDIR, parser.get('directories','galsim_psf_directory'))
-    expDir = '%s%s' % (TMPDIR, parser.get('directories','exp_directory'))
-
-    try:
-        os.mkdir(TMPDIR)
-        os.mkdir(chipDir)
-        os.mkdir(headDir)
-        os.mkdir(psfDir)
-        os.mkdir(weightsDir)
-        os.mkdir(galsimPSFDir)
-        os.mkdir(expDir)
-
-        # Make the rotated folders.
-        nRot = int(parser.get('imsim','n_rot'))
-        for ii in range(0, nRot):
-            chipDirRot = '%s%s%02d' % (TMPDIR, parser.get('directories','chiprot_directory'), ii+1)
-            os.mkdir(chipDirRot)
-
-    except OSError:
-        pass
-
-    return TMPDIR, runID
-'''
-Create a folder to hold the data archive. This will also store the config files used for the run.
-'''
 def createRandomKeyFolder(randomKey):
     # For the archive folder
     randomKeyDirectory = '%s%s' % (parser.get('directories','archive_directory'), randomKey)
@@ -669,18 +548,74 @@ def createRandomKeyFolder(randomKey):
     return randomKeyDirectory
 
 '''
+Temp Directory Structure. The IMSIM Pipeline will create
+a set of directories and subdirectories in order to handle
+with the data creation. These will be removed once done.
+'''
+def createWorkFolder(g1, g2, psfSet):
+    print '      Creating Temp. Directories';sys.stdout.flush()
+
+    # Load the Root Directory from the parser.
+    rootDirectory = parser.get('directories','root_directory')
+
+    # Add shear information.
+    g1Part = ''
+    if g1 > 0:
+        g1Part += 'p'
+    else:
+        g1Part += 'm'
+    g1Part += '%03d' % abs((g1*10000.1))
+    g2Part = ''
+    if g2 > 0:
+        g2Part += 'p'
+    else:
+        g2Part += 'm'
+    g2Part += '%03d' % abs((g2*10000.1))
+
+    # Set up the RUNID.
+    runID = '%s%s_%s_%s' % (g1Part, g2Part, psfSet, randomKey)
+
+    # Create the sub-directories.
+    TMPDIR = '%s%s/%s/' % (rootDirectory, randomKey, runID)
+    chipDir = '%s%s' % (TMPDIR, parser.get('directories','chip_directory'))
+    headDir = '%s%s' % (TMPDIR, parser.get('directories','head_directory'))
+    psfDir = '%s%s' % (TMPDIR, parser.get('directories','psf_directory'))
+    weightsDir = '%s%s' % (TMPDIR, parser.get('directories','weight_directory'))
+    galsimPSFDir = '%s%s' % (TMPDIR, parser.get('directories','galsim_psf_directory'))
+
+    try:
+        os.mkdir(TMPDIR)
+        os.mkdir(chipDir)
+        os.mkdir(headDir)
+        os.mkdir(psfDir)
+        os.mkdir(weightsDir)
+        os.mkdir(galsimPSFDir)
+    except:
+        print "Temp directories already exist."
+
+    # Make the rotated folders.
+    nRot = int(parser.get('imsim','n_rot'))
+    for ii in range(0, nRot):
+        chipDirRot = '%s%s%02d' % (TMPDIR, parser.get('directories','chiprot_directory'), ii+1)
+        try:
+            os.mkdir(chipDirRot)
+        except:
+            print "%s already exists." %(chipDirRot)
+
+    return TMPDIR, runID
+
+'''
 Create a folder in the data archive. This will only store
 the priors file and the LensFIT output files and these will
 also be compressed to save space.
 '''
 def createArchiveFolder(runID):
     print '      Creating Archive Directory';sys.stdout.flush()
-    randomKey = runID.split('_')[-1]
     archiveDirectory = '%s%s/%s' % (parser.get('directories','archive_directory'), randomKey, runID)
     try:
         os.mkdir(archiveDirectory)
-    except OSError:
-        pass
+    except:
+        print "The archive directory already exists."
     return archiveDirectory
 
 '''
@@ -774,238 +709,16 @@ def AsciiToFits(catalogue_name):
 
 	tbhdu.writeto('%s/%s.fits' % (ARCHDIR, catalogue_name), overwrite=True)
 
-def combine_galaxy_star_catalogues(path_input_cat, path_star_cat,path_output_cat):
-    galaxy_cat = fits.open(path_input_cat)
-    star_cat = fits.open(path_star_cat)
+def fetch_random_seed(RUNID):
+        prefix = RUNID.rpartition('_')[0]
+        parent_directory = '/disks/shear12/herbonnet/kids/data/vault_03052016_newmagdistr/'
+        subdirectory = [subdir for subdir in os.listdir(parent_directory) if prefix in subdir and not '.tar.gz' in subdir][0]
 
-    galaxy_data = galaxy_cat[1].data
-    star_data = star_cat[1].data
-
-    rank = galaxy_data['rank']
-
-    x_offset, y_offset = 1627.71, 646.21
-
-    X = np.append(star_data['X_IMAGE']-x_offset, galaxy_data['Xpos_THELI']-x_offset)
-    Y = np.append(star_data['Y_IMAGE']-y_offset, galaxy_data['Ypos_THELI']-y_offset)
-    MAG = np.append(star_data['MAG'], galaxy_data['MAG_AUTO_THELI']*(rank>0) + galaxy_data['MAGR']*(rank==0))
-    SERSICN = np.append(-np.ones(len(star_data)), galaxy_data['N_GALFIT_HI'])
-    RE = np.append(-np.ones(len(star_data)), galaxy_data['RE_GALFIT_HI'])
-    q = np.append(np.ones(len(star_data)), galaxy_data['BA_GALFIT_HI'])
-    phi = np.append(np.zeros(len(star_data)), (galaxy_data['PA_GALFIT_HI']+90.)*np.pi/180)
-    photoz = np.append(np.zeros(len(star_data)), galaxy_data['Z_B'])
-    SeqNr = np.append(-np.ones(len(star_data)), galaxy_data['SeqNr'])
-
-    flag = np.array( [-1]*len(star_data)+[2]*(rank>0).sum()+[0]*(rank==0).sum() )
-
-    c1 = fits.Column(name='X_IMAGE',format='D',array=X,unit='pix')
-    c2 = fits.Column(name='Y_IMAGE',format='D',array=Y,unit='pix')
-    c3 = fits.Column(name='MAG_AUTO',format='D',array=MAG)
-    c4 = fits.Column(name='N_GALFIT_HI',format='D',array=SERSICN)
-    c5 = fits.Column(name='RE_GALFIT_HI',format='D',array=RE,unit='pix')
-    c6 = fits.Column(name='BA_GALFIT_HI',format='D',array=q)
-    c7 = fits.Column(name='PA_GALFIT_HI',format='D',array=phi,unit='radians')
-    c8 = fits.Column(name='Z_B',format='D',array=photoz)
-    c9 = fits.Column(name='FLAG',format='J',array=flag)
-    c10 = fits.Column(name='SeqNr',format='J',array=SeqNr)
-
-    cols = fits.ColDefs([c1,c2,c3,c4,c5,c6,c7,c8,c9,c10])
-    tbhdu = fits.BinTableHDU.from_columns(cols)
-
-    tbhdu.writeto(path_output_cat)
-
-
-def pipeline1(g1g2, psfSet, rot_id, randomKey, q=None):
-
-    # Create unique temp directory
-    TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet, randomKey)
-
-    # Create data archive entry.
-    ARCHDIR = createArchiveFolder(RUNID)
-
-    #g1g2ShearRange = RUNID.split('_')[0] # UNKNOWN FUNCTION
-    #g1g2ShearPSF = RUNID.split('_')[1] # UNKNOWN FUNCTION
-
-    print '      Rendering Images for rotation = ', rot_id
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-    startTime = time.time()
-
-    # Call the image generator code.
-    imsim.create_imsims(psfSet, g1g2[0], g1g2[1],
-                        galCatPath, starCatPath,
-                        '%s/%s' % (ARCHDIR, 'ditherArray.txt'),
-                        '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
-                        '%s%s/' % (TMPDIR, parser.get('directories', 'exp_directory')),
-                        n_gal=True, stars=stars, faint_gal=False,
-                        rot_id=rot_id, n_rotations=n_rot, sersic_only=sersic_only)
-
-    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Extract the dither information
-    ditherArray = extractDithers()
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Chip the exposures
-    print '      Chipping Exposures',
-    startTime = time.time()
-    ChipExposures(ditherArray, rot_id)
-    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Convert the PSFs
-    print '      Converting PSFs'
-    for exposure in xrange(0, int(parser.get('chipping', 'n_exposures'))):
-        convertPSF(exposure)
-
-    # Create a LensFIT Input file, clear the list of chip names.
-    CHIPNAMES = []
-    prepareInputFile()
-    createInputFile()
-    CHIPNAMES = []
-
-    if rot_id==0:
-        ## To do this for all rot_id are not is something to be discussed.
-
-        # Swarp Chips/Weights
-        swarpChips(isWeights=False, chip_rot_name='chip')
-        swarpChips(isWeights=True)
-
-        # Sextractor Positions
-        sextractorPositions(chip_rot_name='chip', rot_number='00')
-
-        # Create LensFIT Catalogue
-        createLensFITCatalog()
-
-    if q is not None:
-        q.put(1)
-
-def pipeline2(g1g2, psfSet, rot_id, randomKey):
-
-    # Create unique temp directory
-    TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet, randomKey)
-
-    # Create data archive entry.
-    ARCHDIR = createArchiveFolder(RUNID)
-
-    # Run LensFIT
-    flensfit(isRotated=bool(rot_id), rotationNumber=rot_id)
-
-    # Apply the weight recalibration.
-    weight_recal_script = parser.get('lensfit', 'weights_recal_path')
-
-    if rot_id == 0:
-        command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
-    else:
-        command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, rot_id)
-    process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-    stdout, stderr = process.communicate()
-
-    # Convert ASCII to FITS Table
-    if rot_id == 0:
-        AsciiToFits('output.fits.asc.scheme2b_corr')
-    else:
-        AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (rot_id))
-
-def pipeline(g1g2, psfSet, rot_id, randomKey, q=None):
-
-    # Create unique temp directory
-    TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet, randomKey)
-
-    # Create data archive entry.
-    ARCHDIR = createArchiveFolder(RUNID)
-
-    #g1g2ShearRange = RUNID.split('_')[0] # UNKNOWN FUNCTION
-    #g1g2ShearPSF = RUNID.split('_')[1] # UNKNOWN FUNCTION
-
-    print '      Rendering Images for rotation = ', rot_id
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-    startTime = time.time()
-
-    # Call the image generator code.
-    imsim.create_imsims(psfSet, g1g2[0], g1g2[1],
-                        galCatPath, starCatPath,
-                        '%s/%s' % (ARCHDIR, 'ditherArray.txt'),
-                        '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
-                        '%s%s/' % (TMPDIR, parser.get('directories', 'exp_directory')),
-                        n_gal=True, stars=stars, faint_gal=False,
-                        psf_params_pathname=psf_params_pathname,
-                        rot_id=rot_id, n_rotations=n_rot, sersic_only=sersic_only,
-                        parallelize=False, internal_parallelize=0)
-
-    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Extract the dither information
-    ditherArray = extractDithers()
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Chip the exposures
-    print '      Chipping Exposures',
-    startTime = time.time()
-    ChipExposures(TMPDIR, ditherArray, rot_id)
-    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
-
-    # Flush the stdoutput
-    sys.stdout.flush()
-
-    # Convert the PSFs
-    print '      Converting PSFs'
-    for exposure in xrange(0, int(parser.get('chipping', 'n_exposures'))):
-        convertPSF(exposure)
-
-    # Create a LensFIT Input file, clear the list of chip names.
-    CHIPNAMES = []
-    CHIPNAMES = prepareInputFile(CHIPNAMES)
-    createInputFile(TMPDIR, CHIPNAMES)
-    CHIPNAMES = []
-
-    # Swarp Chips/Weights (Weights only for rot_id==0)
-    swarpChips(TMPDIR, isWeights=False, chip_rot_name='chip',rot_number=rot_id)
-    if rot_id==0:
-        swarpChips(TMPDIR, isWeights=True)
-
-    # Sextractor Positions
-    sextractorPositions(TMPDIR, ARCHDIR, chip_rot_name='chip', rot_number=rot_id)
-
-    # Create LensFIT Catalogue
-    createLensFITCatalog(TMPDIR, rot_id)
-
-    # Run LensFIT
-    flensfit(TMPDIR, ARCHDIR, isRotated=bool(rot_id), rotationNumber=rot_id)
-
-    # Apply the weight recalibration.
-    weight_recal_script = parser.get('lensfit', 'weights_recal_path')
-
-    if rot_id == 0:
-        command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
-    else:
-        command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, rot_id)
-    process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-    stdout, stderr = process.communicate()
-
-    # Convert ASCII to FITS Table
-    if rot_id == 0:
-        AsciiToFits('output.fits.asc.scheme2b_corr')
-    else:
-        AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (rot_id))
-
-    if q is not None:
-        q.put(1)
-
+        ## The following functionality is available within imsimpriors as well, so might as well return the full path of the subdirectory
+        with open(os.path.join(parent_directory,subdirectory,'prior'),'r') as f:
+            line = f.readline()
+        random_seed = line.split()[-1]
+        return long(random_seed)
 
 """
 Main Method.
@@ -1062,9 +775,7 @@ if __name__ == '__main__':
     parser.read(configPath)
 
     # Define a unique random key for a run.
-    #randomKey = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(10))
-    #randomKey = 'LC0U9WKPPF' # for testing
-    #randomKey = 'JVHX2VWORO' # for Massimo
+    global randomKey
     randomKey = options.randomKey
 
     ## RandomKey must not contain an underscore, otherwise, only a part will be extracted in later operations.
@@ -1103,39 +814,11 @@ if __name__ == '__main__':
     psfRange = options.psfrange.split(',')
     psfRange = [int(i) for i in psfRange]
 
-    # Check if rotations are on.
-    rot_on = int(parser.get('imsim', 'rot'))
-    n_rot = int(parser.get('imsim', 'n_rot'))
-
-    # Check if we are simulating B+D models along with Sersic
-    sersic_only = bool(int(parser.get('imsim', 'sersic_only')))
-    print "  Are we using only Sersic profiles?: ", sersic_only
-    if sersic_only is True:
-        galCatPath = parser.get('imsim', 'sersic_catalogue')
-    else:
-        galCatPath = parser.get('imsim', 'BD_catalogue')
-
-    print "  Using {0} as the input galaxy catalogue ".format(galCatPath)
-
-    stars = bool(int(parser.get('imsim', 'stars')))
-    print "  Are we including stars? :", stars
-
-    if stars:
-        starCatPath = parser.get('imsim', 'star_catalogue')
-        print "  Using {0} as the input star catalogue ".format(starCatPath)
-
-    else:
-        starCatPath = None
-
-    ## Set whether to parallelize the pipeline (recommended) or not
-    parallelize_pipeline = False
-
     print '  Random key          = %s' %randomKey
     print '  Running Range of g1 = %s' % g1Range
     print '  Running Range of g2 = %s' % g2Range
     print '  Running PSF Sets    = %s' % psfRange
     print '  Noise Sigma         = %f' % noise_sigma
-    print '  Rotations Flag      = %d' % rot_on
 
     for g1g2 in zip(g1Range, g2Range):
 
@@ -1144,159 +827,136 @@ if __name__ == '__main__':
             print '    Running for g1, g2 = %.4f \t %.4f [PSF Set : %d]' % (g1g2[0], g1g2[1], psfSet)
 
             # Create unique temp directory
-            TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet, randomKey)
+            TMPDIR, RUNID = createWorkFolder(g1g2[0], g1g2[1], psfSet)
 
             # Create data archive entry.
             ARCHDIR = createArchiveFolder(RUNID)
             print '      Run ID = %s' % RUNID
 
-            g1g2ShearRange = RUNID.split('_')[0] #UNKNOWN FUNCTION
-            g1g2ShearPSF = RUNID.split('_')[1] #UNKNOWN FUNCTION
+            g1g2ShearRange = RUNID.split('_')[0]
+            g1g2ShearPSF = RUNID.split('_')[1]
+
+            random_seed = fetch_random_seed(RUNID)
+
+            # priorFilePrevious = '/users/ianfc/kids/priors4/prior_%s_%s' % (g1g2ShearRange, g1g2ShearPSF)
+            # priorFilePrevious = '/users/ianfc/priors/bright_small_gals_prior_psf2'
+            # Call priors code to generate a set of priors.
+            print '      Generating Priors',
+            startTime = time.time()
+            imsimpriors.create_priorfile(psfSet,
+                                         parser.get('priors', 'besancon_path'),
+                                         '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
+                                         parser.get('priors', 'psfset_path'),
+                                         grid_positions=False,
+                                         nr_of_stars=False,
+                                         nr_of_bright_gals=True,
+                                         nr_of_faint_gals=False,
+                                         random_seed=random_seed
+                                         )
+            # rewrite_prior.rewrite_old_prior(priorFilePrevious,'%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
+            # shutil.copyfile(priorFilePrevious, '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
+            # cut_priorfile_on_area(priorFilePrevious, '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
+            print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
+
+            # Generate the input catalogue for Lensfit from the priors file.
+            '''
+            print '      Generating Lensfit Input File'
+            createFitsTable('%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
+                            '%s/%s.fits' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
+
+            createLensFITCatalogXYSKY('%s/%s.fits' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
+                                      '%s%s' % (TMPDIR, parser.get('lensfit','input_catalog')),
+                                      '%s/%s.match.asci' % (ARCHDIR, parser.get('priors', 'prior_catalog')))
+
+         '''
 
             # Flush the stdoutput
             sys.stdout.flush()
 
-            if parallelize_pipeline is False:
-#                for rot_id in xrange(0):
-                for rot_id in xrange(n_rot+1):
-                    # Call the image generator code.
-                    print '      Rendering Images'; sys.stdout.flush()
+            # Extract the dither information
+            ditherArray = extractDithers()
 
-                    startTime = time.time()
-                    imsim.create_imsims(psfSet, g1g2[0], g1g2[1],
-                                        galCatPath, starCatPath,
-                                        '%s/%s' % (ARCHDIR, 'ditherArray.txt'),
-                                        '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
-                                        '%s%s/' % (TMPDIR, parser.get('directories', 'exp_directory')),
-                                        psf_params_pathname = parser.get('priors', 'psfset_path'),
-                                        n_gal=True, stars=stars, faint_gal=False,
-                                        rot_id=rot_id, sersic_only=sersic_only, parallelize=False)
+            # Call the image generator code. Generates 10 images,
+            # 5 at nominal position and 5 at 90deg rotatation.
+            print '      Rendering Images ** USING NO IMSIM REMORPH **',
+            startTime = time.time()
+            imsim.create_imsims(g1g2[0], g1g2[1],
+                                int(parser.get('imsim', 'n_threads')),
+                                '%s/%s' % (ARCHDIR, parser.get('priors', 'prior_catalog')),
+                                '%s%s/' % (TMPDIR, parser.get('directories', 'galsim_psf_directory')),
+                                'REMOVE THIS PARAMATER',
+                                parser, ditherArray, TMPDIR, noise_sigma)
+            print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
 
-                    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
+            # Flush the stdoutput
+            sys.stdout.flush()
 
-                    # Flush the stdoutput
-                    sys.stdout.flush()
+            # Convert the PSFs
+            for exposure in xrange(0, int(parser.get('chipping', 'n_exposures'))):
+                convertPSF(exposure)
 
-                    # Extract the dither information
-                    ditherArray = extractDithers()
+            # Create a LensFIT Input file, clear the list of chip names.
+            prepareInputFile()
+            createInputFile()
+            CHIPNAMES = []
 
-                    # Flush the stdoutput
-                    sys.stdout.flush()
+            '''
+            Removed the Swarping and Sextractor for now. We now create the input
+            catalogue directly from the truth priors catalogue.
+            '''
 
-                    # Chip the exposures
-                    print '      Chipping Exposures',
-                    startTime = time.time()
-                    ChipExposures(TMPDIR, ditherArray, rot_id)
-                    print ' [%s]' % (str(datetime.timedelta(seconds=(time.time() - startTime))))
+            # Swarp Chips/Weights
+            swarpChips(isWeights=False, chip_rot_name='chip')
+            swarpChips(isWeights=True)
 
-                    # Flush the stdoutput
-                    sys.stdout.flush()
+            # Sextractor Positions
+            sextractorPositions(chip_rot_name='chip', rot_number='00')
 
-                    # Convert the PSFs
-                    print '      Converting PSFs'
-                    for exposure in xrange(0, int(parser.get('chipping', 'n_exposures'))):
-                        convertPSF(exposure)
+            # Create LensFIT Catalogue
+            createLensFITCatalog()
 
-                    # Create a LensFIT Input file, clear the list of chip names.
-                    CHIPNAMES = []
-                    prepareInputFile(CHIPNAMES)
-                    createInputFile(TMPDIR, CHIPNAMES)
-                    CHIPNAMES = []
+            # print ' Only doing 3rd Rotation'
+            # flensfit(isRotate=True, rotationNumber=3)
 
-                    '''
-                    Removed the Swarping and Sextractor for now. We now create the input
-                    catalogue directly from the truth priors catalogue.
-                    '''
+            # Run LensFIT for Nominal and Rotated Images
+            flensfit(isRotated=False, rotationNumber=0)
+            #for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
+                #flensfit(isRotated=True, rotationNumber=nRot + 1)
 
-                    # Swarp Chips/Weights
-                    swarpChips(TMPDIR, isWeights=False, chip_rot_name='chip', rot_number=rot_id)
-                    if rot_id==0:
-                        swarpChips(TMPDIR, isWeights=True)
+            # Apply the weight recalibration.
+            weight_recal_script = parser.get('lensfit', 'weights_recal_path')
 
-                    # Sextractor Positions
-                    sextractorPositions(TMPDIR, ARCHDIR, chip_rot_name='chip', rot_number=rot_id)
+            command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
+            process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+            stdout, stderr = process.communicate()
 
-                    # Create LensFIT Catalogue
-                    createLensFITCatalog(TMPDIR, rot_id)
-
-                # Run LensFIT for Nominal and Rotated Images
-                flensfit(TMPDIR, ARCHDIR, isRotated=False, rotationNumber=0)
-                if rot_on == 1:
-                    for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                        flensfit(TMPDIR, ARCHDIR, isRotated=True, rotationNumber=nRot + 1)
-
-                # Apply the weight recalibration.
-                weight_recal_script = parser.get('lensfit', 'weights_recal_path')
-
-                command = 'python %s --input=%s/output.fits.asc' % (weight_recal_script, ARCHDIR)
-                process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-                stdout, stderr = process.communicate()
-
-                if rot_on == 1:
-                    for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                        command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, nRot + 1)
-                        process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
-                        stdout, stderr = process.communicate()
+            #for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
+                #command = 'python %s --input=%s/%02d.output.rot.fits.asc' % (weight_recal_script, ARCHDIR, nRot + 1)
+                #process = Popen(command, stdout=PIPE, stderr=PIPE, shell=True)
+                #stdout, stderr = process.communicate()
 
                 # Convert ASCII to FITS Table
-                AsciiToFits('output.fits.asc.scheme2b_corr')
+            AsciiToFits('output.fits.asc.scheme2b_corr')
 
-                if rot_on == 1:
-                    for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                        AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (nRot+1))
+            #for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
+                #AsciiToFits('%02d.output.rot.fits.asc.scheme2b_corr' % (weight_recal_script))
 
-                # Compress the data into an archive
-                compressArchive()
-
-                # Remove the temp folders if specificed to do so
-                if removeTemp:
-                    shutil.rmtree(TMPDIR)
-
-                # Remove uncompressed archive folder
-#                shutil.rmtree(ARCHDIR)
-
-                # Copy over archive to vault
-                if ramDisk:
-                    archivePathRamDisk = '%s%s.tar.gz' % (parser.get('directories', 'archive_directory'), RUNID)
-                    archivePathVault = '%s%s.tar.gz' % (parser.get('directories', 'vault_directory'), RUNID)
-                    shutil.move(archivePathRamDisk, archivePathVault)
-                    os.remove(archivePathRamDisk)
-
-    if parallelize_pipeline is True:
-        ## WARNING: UNCHECKED
-        procs_all = []
-        n_workers = len(g1Range)*len(psfRange)*(n_rot+1)
-        p = Pool(processes=n_workers)
-        for psfSet in psfRange:
-            for g1g2 in zip(g1Range, g2Range):
-                for rot_id in xrange(n_rot+1):
-                    proc = p.apply_async(func=pipeline, args=(g1g2, psfSet, rot_id, randomKey))
-                    procs_all.append(proc)
-
-        p.close()
-        p.join()
-
-        #procs_all = []
-        ##p = Pool(processes=64)
-        #for psfSet in psfRange:
-        #    for g1g2 in zip(g1Range, g2Range):
-        #        for rot_id in xrange(n_rot+1):
-        #            proc = Process(target=pipeline1, args=(g1g2, psfSet, rot_id, randomKey))
-        #            #proc = p.apply_async(func=pipeline1, args=(g1g2, psfSet, rot_id, randomKey))
-        #            procs_all.append(proc)
-
-        ### Wait for 'all' image simulations to finish before running lensfit on 'all' fields
-
-        ##useless_results = [q.get() for proc in procs_all]
-
-        #procs2_all = []
-        ##p2 = Pool(processes=64)
-        #for psfSet in psfRange:
-        #    for g1g2 in zip(g1Range, g2Range):
-        #        for rot_id in xrange(n_rot+1):
-        #            proc2 = Process(target=pipeline2, args=(g1g2, psfSet, rot_id, randomKey))
-        #            #proc2 = p2.apply_async(func=pipeline2, args=(g1g2, psfSet, rot_id, randomKey))
-        #            procs2_all.append(proc2)
+            # Compress the data into an archive
+            compressArchive()
+    
+            # Remove the temp folders if specificed to do so
+            if removeTemp:
+                shutil.rmtree(TMPDIR)
+    
+            # Remove uncompressed archive folder
+            shutil.rmtree(ARCHDIR)
+    
+            # Copy over archive to vault
+            if ramDisk:
+                archivePathRamDisk = '%s%s.tar.gz' % (parser.get('directories', 'archive_directory'), RUNID)
+                archivePathVault = '%s%s.tar.gz' % (parser.get('directories', 'vault_directory'), RUNID)
+                shutil.move(archivePathRamDisk, archivePathVault)
+                os.remove(archivePathRamDisk)
 
     # Stop timer
     t1 = time.time()

@@ -32,12 +32,6 @@ include_shot_noise = False
 ## How many exposures do we simulate?
 n_tot_exposures = 5
 
-### How many rotations do we do to cancel shape noise?
-#n_rotations = 4
-
-#ditherArray = [galsim.PositionD(0.,0.), galsim.PositionD(5.3,-4.2), galsim.PositionD(-6.1,-4.9), galsim.PositionD(-3.6,5.2), galsim.PositionD(7.5,5.5)]
-#ditherArray = [galsim.PositionD(0.,0.), galsim.PositionD(25/0.214,85/0.214), galsim.PositionD(2*25/0.214,2*85/0.214), galsim.PositionD(3*25/0.214,3*85/0.214), galsim.PositionD(4*25/0.214,4*85/0.214)]
-
 ## Load the combined input catalogue
 input_cat_name = '/disks/shear14/arunkannawadi/catalogue_matching/KiDS_unmasked_Griffith_iMS1.cat'
 input_catalogue = fits.open(input_cat_name)
@@ -47,8 +41,10 @@ output_image_name = '/disks/shear14/arunkannawadi/imsim/canvas.fits'
 
 ## Should the invidual postage stamps be saved?
 save_stamps = False
+if save_stamps is True:
+    print "Warning! save_stamps option is on. This would take a considerable amount of storage!"
 
-## Where should the postage stamps go?
+## If saving the stamps, where should the postage stamps go?
 postage_stamps_dir = '/disks/shear14/arunkannawadi/imsim/postage_stamps/{0}_band/trunc5/'.format(filter_name)
 
 ## What should the final image be called (exclude .fits extension)
@@ -65,11 +61,15 @@ magAB_zeropoint = 24.66
 #exp_time = 1.0/1800 #TNR
 #gain = 3331.08077604 #TNR
 
-## Now some GalSim parameters
 ## Random Number Generator
-rng_seed = 1234567
-rng = galsim.BaseDeviate(rng_seed)
+base_seed = 1234567
+
+## Now some GalSim parameters
 gsp = galsim.GSParams(maximum_fft_size=16384)
+
+## RNG circus to match RH imsims
+#rng_seeds =  [rng_seed + i*68 for i in xrange(5)] ## One rng_seed per exposure
+#rngs = [ galsim.BaseDeviate(rs) for rs in rng_seeds ]
 
 ## Sensible values for the parameters
 n_min, n_max = 0.3, 6.2 # limits set by GalSim
@@ -81,7 +81,10 @@ wcs_filename = "/disks/shear14/KiDS_simulations/Cosmos/Theli_image/KIDS_150p1_2p
 wcs = galsim.AstropyWCS(wcs_filename)
 #wcs = galsim.AstropyWCS("/disks/shear14/KiDS_simulations/Cosmos/AW_images/KIDS450_150.1_2.2_r_sci.fits")
 canvas_bounds = galsim.fits.read(wcs_filename).bounds
-
+#canvas_size_x = 16810
+#canvas_size_y = 16530
+#canvas_bounds = galsim.BoundsI(xmin=0,ymin=0,xmax=canvas_size_x,ymax=canvas_size_y)
+## The origin has to be 0,0 to get the same X, Y as in the COSMOS data
 
 ### Default cut
 #default_cuts = (mask)&(rank>0)&(distance2d<0.5)&(weight>5)
@@ -127,7 +130,7 @@ canvas_bounds = galsim.fits.read(wcs_filename).bounds
 #
 
 ## Routines
-def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
+def getKiDSPSFs(psfset_id, exp_id, psf_params_pathname):
     """ Generate the Moffat PSF models
 
         @param psfset_id                    PSFSet ID, ranging from 0 to 12 (inclusive).
@@ -142,11 +145,7 @@ def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
         @returns                            A GalSim Moffat instance for the PSF
     """
 
-    ## TO DO: Make this input compulsory
-    if psf_params_filename is None:
-        psf_params_filename = '/disks/shear15/KiDS/ImSim/pipeline/utils/5_psfs.txt'
-
-    psf_params_file = open(psf_params_filename,'r')
+    psf_params_file = open(psf_params_pathname,'r')
     psf_params_lines = psf_params_file.readlines()
     psf_params_file.close()
 
@@ -162,6 +161,9 @@ def getKiDSPSFs(psfset_id, exp_id, psf_params_filename=None):
     psf_e = np.sqrt(psf_e1**2+psf_e2**2)
     ## g = (1-q)/(1+q)
     psf_g1,psf_g2 = psf_e1/(2-psf_e), psf_e2/(2-psf_e)
+
+## HACK or REAL ?????????????????????????????????????????????????????????????????????????????
+    psf_g1, psf_g2 = psf_e1, psf_e2
 
     psf = galsim.Moffat(beta=moffat_beta,fwhm=fwhm,trunc=4.5*fwhm).shear(g1=psf_g1,g2=psf_g2)
 
@@ -192,7 +194,7 @@ def getKiDSPSF(filter_name='r'):
     
     return psf
 
-def getStarImages(PSF,star_catalogue, ditherArray, exp_id=0):
+def getStarImages(PSF,star_catalogue, ditherArray, exp_id):
     """ Obtain a canvas image containing stars.
 
         @param PSF          The PSF which appears as the star in the field
@@ -216,7 +218,7 @@ def getStarImages(PSF,star_catalogue, ditherArray, exp_id=0):
 
     x_image = star_dat['X_IMAGE']
     y_image = star_dat['Y_IMAGE']
-    star_mag = 17*np.ones_like(x_image) #star_dat['mag']
+    star_mag = star_dat['MAG']
     star_flux = 10.**(-0.4*(star_mag-magAB_zeropoint))
 
     ## Set up an empty canvas
@@ -245,13 +247,13 @@ def getStarImages(PSF,star_catalogue, ditherArray, exp_id=0):
 
     return star_field
 
-def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_id=0, rot_id=0, n_rotations=4, g1=0.0, g2=0.0, sersic_only=True, fixed_stamp_size=None):
+def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id, psf_params_pathname, exp_id, rot_id, g1, g2, n_rotations=4, sersic_only=True, fixed_stamp_size=None):
     """ Obtain the postage stamps for a given list of indices.
 
         @param hst_indices          A list of row indices that need to be simulated from the input catalogue.
         @param psfset_id            The ID of the CCD chip to determine the PSF.
-        @param exp_id               Takes one of 0,1,2,3,4 [default: 0]
-        @param rot_id               Which of the n_rotations are we simulating? [default: 0, unrotated]
+        @param exp_id               Takes one of 0,1,2,3,4
+        @param rot_id               Which of the n_rotations are we simulating?
         @param n_rotations          Number of rotations to use for shape noise cancellation.
         @param g1                   The true weak lensing shear g1 [default: 0.0]
         @param g2                   The true weak lensing shear g2 [default: 0.0]
@@ -261,15 +263,18 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
                                     with the logs.
     """
 
+    print "Entering getPostageStamps ... "
+
     ## Get rid of the nan s in hst_indices
     hst_indices = hst_indices[~np.isnan(hst_indices)].astype(int)
 
     ## Get the PSF
-    PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id) ## 
+    PSF = getKiDSPSFs(psfset_id=psfset_id, exp_id=exp_id,psf_params_pathname=psf_params_pathname) ##
     #PSF = getKiDSPSF(filter_name=filter_name) ## old
 
     ## Get the galaxy parameters
     ## Griffith parameters
+    ## TODO: Move the reading operations in the outer level, preferably to the pipeline
     obj_no = galaxy_dat.field('OBJNO').astype(int) ## OBJNO
 
     n = galaxy_dat.field('N_GALFIT_HI').astype(float)  ## Sersic index n
@@ -312,9 +317,14 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
     DEC = galaxy_dat.field('DEC_THELI').copy() ## DEC
     RA[rank==0], DEC[rank==0] = galaxy_dat.field('RA')[rank==0], galaxy_dat.field('DEC')[rank==0]
 
+#    ## NEW! Positions in Image coordinates
+#    X = galaxy_dat.field('X_IMAGE')
+#    Y = galaxy_dat.field('Y_IMAGE')
+
     ## Use Theli magnitudes when available. Else, use MAGR
     mag = galaxy_dat.field('MAG_AUTO_THELI').copy()
     mag[rank==0] = galaxy_dat.field('MAGR')[rank==0]
+#    mag = galaxy_dat.field('MAGNITUDE')
 
     ## Avoid exponentiating magnitudes directly to minimize overflow/numerical errors
     #F0 =  gain*exp_time*(10**(0.4*magAB_zeropoint)) ## for FLUX_GAAP
@@ -343,7 +353,7 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
     ## Initiate a canvas image
     canvas_images = galsim.Image(canvas_bounds)
 
-    n_count, n_reset = 0, 1000 ## Report when n_count reaches n_reset
+    n_count, n_reset = 0, 500000 ## Report when n_count reaches n_reset
     print "Creating postage stamps now. I will report every {0} galaxies".format(n_reset)
 
     ## Beginning the loop over galaxies
@@ -395,7 +405,7 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
                 gal_beta = (90+beta[hst_idx])
             else:
                 ## Rotate in uniform steps from 0 to 90
-                gal_beta = (90+beta[hst_idx]+rot_id*90./(n_rotations-1)) ## in degrees
+                gal_beta = (90+beta[hst_idx]+rot_id*45.) ## in degrees
             ## Griffith PA are wrt y, so add a 90. It shouldn't matter for other catalogues if n_rotations>1
 
             ## See if the galaxy has sensible parameters and if not, dismiss them
@@ -566,6 +576,7 @@ def getPostageStamps(hst_indices, ditherArray, galaxy_dat, psfset_id=None, exp_i
             logger.info("Total time for simulating {0} galaxies is {1}".format(n_reset,t2-t1))
             sys.stdout.flush()
 
+    print "Exiting from getPostage stamps."
     sys.stdout.flush()
 
     #canvas_image = canvas_from_postageStamps(wcs=wcs, canvas_filename='temp', postage_stamps=postage_stamps)
@@ -578,17 +589,20 @@ def workHorse(input_queue, output_queue):
     results = getPostageStamps(indices, **kwargs)
     output_queue.put(results)
 
-def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=None, star_catalogue=None, galaxy_dat=None, sersic_only=True, cuts=None, parallelize=0):
+def imsim(exp_id, rot_id, psfset_id, g1, g2, n_rotations, ditherArray, dir_exp, psf_params_pathname, dir_psf=None, star_catalogue=None, galaxy_dat=None, sersic_only=True, cuts=None, parallelize=0):
     ## It is good to log the beginning time and some important input parameters
     logger.info("'imsim' called at: {0}".format(time.ctime()))
 
-    kwds = {'psfset_id':0, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, 'sersic_only':sersic_only, \
-            'ditherArray':ditherArray, 'g1':g1, 'g2':g2, 'fixed_stamp_size':None, 'galaxy_dat':galaxy_dat}
+    kwds = {'psfset_id':psfset_id, 'exp_id':exp_id, 'rot_id':rot_id, 'n_rotations':n_rotations, 'sersic_only':sersic_only, \
+            'ditherArray':ditherArray, 'g1':g1, 'g2':g2, 'fixed_stamp_size':None, 'galaxy_dat':galaxy_dat,'psf_params_pathname':psf_params_pathname}
+
+    rng_seed = rng_generator(base_seed, **kwds)
+    rng = galsim.BaseDeviate(rng_seed)
 
     ### Generate a star field
     if star_catalogue is not None:
-        PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id)
-        star_images = getStarImages(PSF=PSF,star_catalogue=star_catalogue,ditherArray=ditherArray)
+        PSF = getKiDSPSFs(psfset_id=psfset_id, exp_id=exp_id,psf_params_pathname=psf_params_pathname)
+        star_images = getStarImages(PSF=PSF,star_catalogue=star_catalogue,ditherArray=ditherArray,exp_id=exp_id)
     else:
         star_images = galsim.Image(canvas_bounds,init_value=0.)
 
@@ -607,22 +621,22 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         import warnings
         warnings.warn("Parallelisation within 'imsim' will mostly not work. Proceed with caution.")
 
-        n_workers = 2
+        n_workers = 12 # because lensfit uses 12
         n_jobs = n_workers
         ## Pad hst_indices with nan, if needbe, and wrap it
         n_nanpad = (n_jobs - len(indices)%n_jobs) if len(indices)%n_jobs>0 else 0
         wrapped_indices = np.reshape(np.append(indices, np.nan*np.ones(n_nanpad)), (n_jobs, len(indices)/n_jobs+1), 'F')
 
-        print "Starting with internal parallel processing..."; sys.stdout.flush()
+        print "Starting with internal parallel processing (method: {0})...".format(parallelize); sys.stdout.flush()
         t1 = time.time()
 
         ## Queue method
-        if parallelize==1:
+        if parallelize==3:
             task_queue = Queue()
             done_queue = Queue()
 
             for proc_id in xrange(n_jobs):
-                task_queue.put((wrapped_indices[proc_id], kwargs))
+                task_queue.put((wrapped_indices[proc_id], kwds))
 
             procs = [Process(target=workHorse,args=(task_queue, done_queue)) for proc_id in xrange(n_jobs)]
             for proc_id in xrange(n_jobs):
@@ -632,14 +646,14 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
             results = [done_queue.get() for proc_id in xrange(n_jobs)]
 
         ## apply_async
-        if parallelize==2:
+        elif parallelize==2:
             p = Pool(processes=n_workers)
             results = [ ]
             def log_results(r):
                 results.append(r)
             #workHorse = lambda x: getPostageStamps(x,psfset_id=0,exp_id=exp_id,n_rotations=n_rotations,g1=0.,g2=0.,fixed_stamp_size=None)
-            #def workHorse(indices):
-            #    return getPostageStamps(indices,psfset_id=0, exp_id=exp_id, n_rotations=n_rotations, g1=0.0, g2=0.0, fixed_stamp_size=None)
+            def workHorse(indices):
+                return getPostageStamps(indices,psfset_id=psfset_id, exp_id=exp_id, n_rotations=n_rotations, g1=g1, g2=g2, fixed_stamp_size=None)
             procs = [p.apply_async(func=getPostageStamps, args=(idx,),kwds=kwds,callback=log_results) for idx in wrapped_indices]
             p.close()
             p.join()
@@ -648,14 +662,19 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
             # http://stackoverflow.com/questions/8533318/python-multiprocessing-pool-when-to-use-apply-apply-async-or-map
         
         ## map_async
-        if parallelize==3:
+        elif parallelize==1:
             p = Pool(processes=n_workers)
             def workHorse(idx):
-                return getPostageStamps(hst_indices=idx, **kwds)
+                return_val = getPostageStamps(hst_indices=idx, **kwds)
+                return return_val
 
+            iterables = []
+            for wi in wrapped_indices:
+                item = kwds.copy
             map_result_get = p.map_async(func=workHorse, iterable=wrapped_indices)
             results = map_result.get(timeout=60*60*10) ## timeout = 10 hours
 
+        print len(results)
         canvas_images, stamp_record_lists = zip(*results)
 
         t2 = time.time()
@@ -682,7 +701,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
     if dir_psf is not None:
         psf_size = 32
         psf_image = galsim.Image(psf_size, psf_size)
-        PSF = getKiDSPSFs(psfset_id=0, exp_id=exp_id)
+        PSF = getKiDSPSFs(psfset_id=psfset_id, exp_id=exp_id,psf_params_pathname=psf_params_pathname)
         PSF_lf = PSF.shift(0.5*pix_scale, 0.5*pix_scale)
         psf_image = PSF_lf.drawImage(image=psf_image, scale=pix_scale)
         psf_filename = 'exp{0}.fits'.format(exp_id)
@@ -704,9 +723,10 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
     stamp_hdu.header['PSF_e2'] = -1
     stamp_hdu.header['PSF_beta'] = -1 #PSF.getBeta()
     stamp_hdu.header['PSF_FWHM'] = -1 #PSF.getFWHM()
+    stamp_hdu.header['rng_seed'] = rng_seed
 
     ## Write it on to the disk now
-    stamp_records_filename = 'stamp_records_rot0{0}.cat'.format(rot_id)
+    stamp_records_filename = 'stamp_records{1}_rot0{0}_rng{2}.cat'.format(rot_id, exp_id,rng_seed-base_seed)
     stamp_records_pathname = os.path.join(dir_exp,stamp_records_filename)
     stamp_hdu.writeto(stamp_records_pathname, overwrite=True)
 
@@ -717,7 +737,7 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         swap_pc_cd_header(full_image_filename+'.fits')
 
     ## Generate the noise field
-    full_image_noise = galsim.GaussianNoise(rng,sigma=kids_noise_level)
+    full_image_noise = galsim.GaussianNoise(rng, sigma=kids_noise_level)
     noise_field = galsim.Image(full_images.bounds)
     noise_field.addNoise(full_image_noise)
     #full_image.addNoise(full_image_noise)
@@ -735,6 +755,14 @@ def imsim(exp_id, rot_id, g1, g2, n_rotations, ditherArray, dir_exp, dir_psf=Non
         #full_image_noisy_filename = full_image_filename+'_noisy.fits'
         ## Chop the image and save it
         chopped_image = chopImage(full_images, output_filename=full_image_noisy_pathname)
+#        chopped_image = chopImage(full_images, None)
+#        noise_field = galsim.Image(chopped_image.bounds) # RNG circus
+#        noise_field.addNoise(full_image_noise) # RNG circus
+#        if rot_id == 0:
+#            noise_field.write('/disks/shear15/KiDS/ImSim/temp/codecomp/KJ_stamps/noisy_exp{0}_seed{1}.fits'.format(exp_id,rng_seeds[exp_id])) #RNG circus
+#            print full_image_noise.getRNG()
+#        chopped_image += noise_field # RNG circus
+#        chopped_image.write(full_image_noisy_pathname)
         #full_images[rot_id].write(full_image_noisy_pathname)
         logger.info("Noisy Image written on to the file at {0}".format(time.ctime()))
         swap_pc_cd_header(full_image_noisy_pathname)
@@ -755,12 +783,14 @@ def chopImage(canvas_image, output_filename=None):
 
     old_bounds = canvas_image.bounds
     center = old_bounds.center()
-    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2
-    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2
+    xmin, xmax = center.x - image_size_x/2, center.x + image_size_x/2 #-1 #n(pix) = xmax-xmin+1
+    ymin, ymax = center.y - image_size_y/2, center.y + image_size_y/2 #-1 #n(pix) = ymax-ymin+1
 
     new_bounds = galsim.BoundsI(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax)
 
     new_image = canvas_image[new_bounds]
+
+    assert new_image.array.shape = (image_size_y, image_size_x) ## until the bug is resolved finally
 
     if output_filename is not None:
         print "output_filename provided. Writing it on to the disk."
@@ -1068,55 +1098,60 @@ def dumpDithers(path_dither=None, n_exposures=5):
 #            path_to_psf_archive_folder, path_to_image_archive_folder,\
 #            configFile, ditherArray, tmpDir, noise_sigma_in):
     
-def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,dir_exp,n_gal=True,stars=False,faint_gal=False,
-                    rot=True,n_rot=3, n_exposures=5,sersic_only=True,parallelize=True,internal_parallelize=0):
+def create_imsims(psfSet,g1,g2,path_input_cat,path_star_cat,path_dither,dir_psf,dir_exp, rot_id, psf_params_pathname,
+                    n_gal=True,stars=False,faint_gal=False, n_rotations=4, n_exposures=5,sersic_only=True,parallelize=True,internal_parallelize=2):
 
     ## Create a dither pattern over the multiple exposures and save it
     ditherArray =  dumpDithers(path_dither,n_exposures=n_exposures)
 
-    n_rotations = 1+n_rot*rot
-
     ## Load the galaxy catalogue
     galaxy_cat = fits.open(path_input_cat)
 
-    MASK_all = galaxy_cat[1].data.MASK
-    mask = ~(np.array(MASK_all&0xfc3c,dtype=bool))
-    rank = galaxy_cat[1].data['rank']
-    distance2d = galaxy_cat[1].data['distance2d']
-    weight = galaxy_cat[1].data['weight']
-    mag1 = galaxy_cat[1].data['MAG_AUTO_THELI']
-    size1 = galaxy_cat[1].data['FWHM_IMAGE_THELI'] # pix
-    mag0 = galaxy_cat[1].data['MAGR']
-    size0 = galaxy_cat[1].data['FLUX_RADIUS_HI']
-    default_cuts = (mask)&(rank>0)&(distance2d<1)&(weight>0)
-    #star_cuts = (~(mag1<24)&(size1<2.8)&(rank>0) |~((rank==0)&(mag0<24)&(size0<2.8)&(mag0>0)&(size0>0)))
-    handpicked_stars = galaxy_cat[1].data['handpicked_stars']
-    star_cuts = (mag0>0)&(~handpicked_stars)
-    cuts = default_cuts&star_cuts
-    #cuts = cuts[np.cumsum(cuts)<2000]
+    apply_cuts = False
+    if apply_cuts is True:
+        MASK_all = galaxy_cat[1].data.MASK
+        mask = ~(np.array(MASK_all&0xfc3c,dtype=bool))
+        rank = galaxy_cat[1].data['rank']
+        distance2d = galaxy_cat[1].data['distance2d']
+        weight = galaxy_cat[1].data['weight']
+        mag1 = galaxy_cat[1].data['MAG_AUTO_THELI']
+        size1 = galaxy_cat[1].data['FWHM_IMAGE_THELI'] # pix
+        mag0 = galaxy_cat[1].data['MAGR']
+        #size0 = galaxy_cat[1].data['FLUX_RADIUS_HI']
+        easy_cuts = (mask)&(rank==1)&(distance2d<0.03)&(weight>12)
+        default_cuts = (mask)&(rank>=0)&(distance2d<1)&(weight>=0)
+        #star_cuts = (~(mag1<24)&(size1<2.8)&(rank>0) |~((rank==0)&(mag0<24)&(size0<2.8)&(mag0>0)&(size0>0)))
+        handpicked_stars = galaxy_cat[1].data['handpicked_stars']
+        star_cuts = (mag0>0)&(~handpicked_stars)
+        #cuts = default_cuts&star_cuts
+        #cuts = easy_cuts&star_cuts
+        #cuts = cuts[np.cumsum(cuts)<2000]
+        cuts = np.arange(0,len(mag0),1)<20
 
-    galaxy_dat = galaxy_cat[1].data[cuts]
+        galaxy_dat = galaxy_cat[1].data[cuts]
+    else:
+        galaxy_dat = galaxy_cat[1].data
 
     print "Input galaxy catalogue loaded ..."
+    sys.stdout.flush()
+
     kwargs = {'g1':g1, 'g2':g2, 'n_rotations':n_rotations, 'dir_exp':dir_exp, 'dir_psf':dir_psf,
               'ditherArray':ditherArray,'parallelize':internal_parallelize, 'sersic_only':sersic_only,
-                'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat}
+              'star_catalogue':path_star_cat, 'galaxy_dat':galaxy_dat, 'psfset_id':psfSet,'psf_params_pathname':psf_params_pathname}
 
     if parallelize:
-        n_workers = n_exposures*n_rotations
+        n_workers = n_exposures
         p = Pool(processes=n_workers)
         procs = []
         for exp_id in xrange(n_exposures):
-            for rot_id in xrange(n_rotations):
-                proc = p.apply_async(func=imsim,args=(exp_id,rot_id),kwds=kwargs)
-                procs.append( proc )
+            proc = p.apply_async(func=imsim,args=(exp_id,rot_id),kwds=kwargs)
+            procs.append( proc )
         p.close()
         p.join()
 
     else: ## if not parallelize
         for exp_id in xrange(n_exposures):
-            for rot_id in xrange(n_rotations):
-                imsim(exp_id=exp_id,rot_id=rot_id,**kwargs)
+            imsim(exp_id=exp_id,rot_id=rot_id,**kwargs)
 
 
 def create_imsim(psfSet, g1, g2,\
@@ -1133,6 +1168,21 @@ def create_imsim(psfSet, g1, g2,\
                         os.path.join(dir_psf,"exp{0}.fits".format(exp_id))])
         #subprocess.call(["cp","/disks/shear14/arunkannawadi/catalogue_matching/KiDS_unmasked_Griffith_iMS1_reducedforpipeline.cat", path_input_cat])
         subprocess.call(["cp", "/disks/shear14/arunkannawadi/imsim/ditherArray.txt", path_dither])
+
+def rng_generator(base_seed, **kwargs):
+    import cmath
+    g1 = kwargs['g1']
+    g2 = kwargs['g2']
+    psfset_id = kwargs['psfset_id']
+    exp_id = kwargs['exp_id']
+    rot_id = kwargs['rot_id']
+
+    g = complex(g1,g2)
+    ## Phase of g takes [-3,-2,-1,0,1,2,3,4]*np.pi/4
+
+    ## All 5x416 square degrees get different rng_seed, so that the noise realisations don't repeat irrespective of parallelization
+    rng_seed = base_seed + int(3+cmath.phase(g)*4/np.pi) + 1000*psfset_id + 10*exp_id + 100*rot_id
+    return rng_seed
     
 
 #if __name__=='__main__':
