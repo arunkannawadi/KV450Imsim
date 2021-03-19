@@ -78,7 +78,9 @@ ls_var_sim=[]
 rot_sim=[]
 ZB4_sim=[]
 ZB9_sim=[]
-ID_sim=[]
+OBJNO_sim=[]
+SeqNr_sim=[]
+LRG_flag_sim=[]
 
 cc=0
 
@@ -175,17 +177,27 @@ for x in range(0,len(list_shear)): #shear values
                     prior_ZB9=prior[:,9]
                 except:
                     prior_ZB9 = -np.ones(len(prior))
-                ##AKJ: Carry over a unique ID from prior file, if it exists. Else, number them.
+                ##AKJ: Carry over a unique OBJNO from prior file, if it exists. Else, number them.
                 if prior.shape[1]>10:
-                    prior_ID=prior[:,10]
+                    prior_OBJNO=prior[:,10]
                 else:
-                    prior_ID=np.arange(0,prior.shape[0],1)
+                    prior_OBJNO=np.arange(0,prior.shape[0],1)
+
+                if prior.shape[1]>11:
+                    prior_SeqNr=prior[:,11]
+                    prior_LRG_flag=prior[:,12]
+                else:
+                    prior_SeqNr=-np.arange(1,1+prior.shape[0],1)
+                    prior_LRG_flag=np.zeros_like(prior_SeqNr)
+
             except:
                 print "Didn't find a few columns in the prior. Filling it up with garbage values"
                 prior_N = -np.ones_like(prior_mag)
                 prior_ZB4 = -4*np.ones_like(prior_mag)
                 prior_ZB9 = -9*np.ones_like(prior_mag)
-                prior_ID = 100*np.ones_like(prior_mag)
+                prior_OBJNO = 100*np.ones_like(prior_mag)
+                prior_SeqNr = 100*np.ones_like(prior_mag)
+                prior_LRG_flag = np.zeros_like(prior_mag)
 
             #prior_xpix=tbdata_prior.X_IMAGE#-1627.71
             #prior_ypix=tbdata_prior.Y_IMAGE#-646.21
@@ -197,7 +209,7 @@ for x in range(0,len(list_shear)): #shear values
             #prior_phi=tbdata_prior.PA_GALFIT_HI#+90.0)*(3.1415/180.)
             #prior_N=tbdata_prior.N_GALFIT_HI
             #prior_ZB4=tbdata_prior.ZB
-            #prior_ID=tbdata_prior.SeqNr
+            #prior_OBJNO=tbdata_prior.SeqNr
             #prior_mode=(1.-prior_q)/(1.+prior_q)
             ############################# 
 
@@ -216,7 +228,9 @@ for x in range(0,len(list_shear)): #shear values
             prior_N_Mask=prior_N[maskPrior]
             prior_ZB4_Mask=prior_ZB4[maskPrior]
             prior_ZB9_Mask=prior_ZB9[maskPrior]
-            prior_ID_Mask=prior_ID[maskPrior]
+            prior_OBJNO_Mask=prior_OBJNO[maskPrior]
+            prior_SeqNr_Mask=prior_SeqNr[maskPrior]
+            prior_LRG_flag_Mask=prior_LRG_flag[maskPrior]
             
             #Note: this is the ellipticity for rotation 00!!!!!!!!
             prior_e1_00=prior[:,4]
@@ -298,7 +312,9 @@ for x in range(0,len(list_shear)): #shear values
                 f_in_sim.append(prior_f_Mask[item[0]])
                 ZB4_sim.append(prior_ZB4_Mask[item[0]])
                 ZB9_sim.append(prior_ZB9_Mask[item[0]])
-                ID_sim.append(prior_ID_Mask[item[0]])
+                OBJNO_sim.append(prior_OBJNO_Mask[item[0]])
+                SeqNr_sim.append(prior_SeqNr_Mask[item[0]])
+                LRG_flag_sim.append(prior_LRG_flag_Mask[item[0]])
                 x_in_sim.append(prior_xpix_Mask[item[0]])
                 y_in_sim.append(prior_ypix_Mask[item[0]])
                 #Here now all quantities out of the LF catalogue
@@ -378,7 +394,9 @@ nd_sim=array(nd_sim)
 size_raw_sim=size_sim-r_corr_sim
 ls_var_sim=array(ls_var_sim)
 rot_sim=array(rot_sim)
-ID_sim=array(ID_sim)
+OBJNO_sim=array(OBJNO_sim)
+SeqNr_sim=array(SeqNr_sim)
+LRG_flag_sim=array(LRG_flag_sim)
 btt_sim=array(btt_sim)
 star_gal_prob_sim=array(star_gal_prob_sim)
 contamination_radius_sim=array(contamination_radius_sim)
@@ -415,7 +433,7 @@ c12bpre=pyfits.Column(name='f_in',format='D',array=f_in_sim)
 c13pre=pyfits.Column(name='e1_in',format='D',array=e1_in_sim)
 c14pre=pyfits.Column(name='e2_in',format='D',array=e2_in_sim)
 c15pre=pyfits.Column(name='ZB4_in',format='D',array=ZB4_sim)
-c16pre=pyfits.Column(name='Cat_ID',format='D',array=ID_sim)
+c16pre=pyfits.Column(name='Cat_ID',format='D',array=OBJNO_sim)
 c17pre=pyfits.Column(name='size_corr',format='D',array=r_corr_sim)
 c18pre=pyfits.Column(name='e1_corr',format='D',array=e1_corr_sim)
 c19pre=pyfits.Column(name='e2_corr',format='D',array=e2_corr_sim)
@@ -439,6 +457,8 @@ c36pre=pyfits.Column(name='metacal_m1',format='D',array=metacal_m1_sim)
 c37pre=pyfits.Column(name='metacal_m2',format='D',array=metacal_m2_sim)
 c38pre=pyfits.Column(name='metacal_c1',format='D',array=metacal_c1_sim)
 c39pre=pyfits.Column(name='metacal_c2',format='D',array=metacal_c2_sim)
-tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre,c36pre,c37pre,c38pre,c39pre])
+c40pre=pyfits.Column(name='SeqNr',format='D',array=SeqNr_sim)
+c41pre=pyfits.Column(name='LRG_flag',format='J',array=LRG_flag_sim)
+tbhdu = pyfits.new_table([c0pre,c1pre, c2pre, c3pre, c4pre, c5pre, c6pre, c7pre, c8pre, c9pre, c10pre, c11pre, c12pre, c13pre, c14pre, c15pre, c16pre, c17pre, c18pre, c19pre, c20pre ,c21pre, c22pre,c23pre,c24pre,c25pre,c26pre,c27pre,c28pre,c29pre,c30pre,c31pre,c32pre,c33pre,c34pre,c12bpre,c35pre,c36pre,c37pre,c38pre,c39pre,c40pre,c41pre])
 tbhdu.writeto(binary_filename,clobber=True)
 print "FITS binary before matching  created, proceeding with analysis."
