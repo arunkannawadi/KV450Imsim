@@ -155,7 +155,8 @@ for xx in range(0,len(patches)):
         tbdata = tbdata[data_cuts]
     
     ## AKJ (Mar 25, 2020) - these cuts shouldn't be in the else block!!! DANGER !!!
-    data_cuts = tbdata['Flag_SOM_{}_NONE'.format(goldflag)]==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
+    if goldflag!='nogold':
+        data_cuts = tbdata['Flag_SOM_{}_NONE'.format(goldflag)]==1 ## @Angus: Enter the cuts you want to impose on the KV450 GOLD catalogues here
     tbdata = tbdata[data_cuts]
     
     ID=tbdata.SeqNr
