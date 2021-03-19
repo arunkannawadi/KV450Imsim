@@ -1174,7 +1174,6 @@ if __name__ == '__main__':
                 flensfit(isRotated=False, rotationNumber=0)
                 #delete_images(RUNID,rot=0)
                 for nRot in range(0, int(parser.get('imsim', 'n_rot'))):
-                #for nRot in [2]:
                     #copy_images(RUNID,rot=nRot+1, ref_run=ref_run)
                     flensfit(isRotated=True, rotationNumber=nRot + 1)
                     #delete_images(RUNID,rot=nRot+1)
