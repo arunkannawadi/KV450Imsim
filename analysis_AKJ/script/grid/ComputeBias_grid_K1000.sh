@@ -27,8 +27,8 @@ for PSF in 13
 do
     masterFile=MasterCat_$(echo $name_run)_all_$(echo $PSF)_PSF.fits
 
-#    python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/assign_ZB.py  $name_run  $PSF /disks/shear15/KiDS/ImSim/analysis_AKJ/script/grid/config.ini ## propagate the COSMOS quantities to simulation outputs
-#    python2.7 $srcDir/merge_tables.py 13 /disks/shear15/KiDS/ImSim/pipeline/archive/$name_run MasterCat_$(echo $name_run) MasterCat_$(echo $name_run)_all_13_PSF.fits
+    python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/assign_ZB.py  $name_run  $PSF /disks/shear15/KiDS/ImSim/analysis_AKJ/script/grid/config.ini ## propagate the COSMOS quantities to simulation outputs
+    python2.7 $srcDir/merge_tables.py 13 /disks/shear15/KiDS/ImSim/pipeline/archive/$name_run MasterCat_$(echo $name_run) MasterCat_$(echo $name_run)_all_13_PSF.fits
 
     #Calculate the surface of doom (in tomographic bins)
     if [ "$TomoFlag" == "Yes" ]
