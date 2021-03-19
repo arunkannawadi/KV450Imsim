@@ -22,7 +22,7 @@ then
 fi
 
 ##Do the weight bias correction (weight recalibration) at a PSF level
-for PSF in 28 #0 1 2 3 4
+for PSF in 0 1 2 3 4 5 6 7 8 9 10 11 12 13
 do
     if [ ! "$name_run" == FC17SBmcal ] || [ ! "$name_run" == TSTnewinputmcal ]
     then
@@ -30,7 +30,7 @@ do
         #python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/recal_LFweights.py $CatDir $CatDir/list_$name_run.t $PSF
     fi
 
-    if [ "$name_run" == FC17SBmcal ] || [ "$name_run" == TSTnewinputmcal ] || [ "$name_run" == FC17gridmcal ] || [ "$name_run" == TSTnewinpGRscramemcal ]
+    if [ "$name_run" == FC17SBmcal ] || [ "$name_run" == TSTnewinputmcal ] || [ "$name_run" == FC17gridmcal ] || [ "$name_run" == TSTnewinpGRscramemcal ] || [ "$name_run" == TSTnewinputLRG ]
     then
         echo "Doing metacal weight recalibration"
         python2.7 /disks/shear15/KiDS/ImSim/pipeline/utils/recal_LFweights.py $CatDir $CatDir/list_$name_run.t $PSF 1
@@ -96,15 +96,15 @@ done < $ArchDir/$(echo $name_run)/list_$(echo $name_run).t
 #as well as the input galaxy properties.
 
 echo "Looping over PSFs now ..."
-for PSF in 28 #0 1 2 3 #4
+for PSF in 0 1 2 3 4 5 6 7 8 9 10 11 12
 do
     echo MasterCat_$(echo $name_run)_set_$PSF.fits
     #if [ ! -f MasterCat_$(echo $name_run)_set_$PSF.fits ]
     #then
         echo "Executing the Python script"
         echo $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t
-        python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
-        #python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/TSTnewinputDEIMOS/MasterCat_TSTnewinputDEIMOS  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
+        #python2.7 $srcDir/create_master_file_oldPrior.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
+        python2.7 $srcDir/create_master_file_metacal.py $CatDir $PSF  $ArchDir/$(echo $name_run)/MasterCat_$(echo $name_run)  $ArchDir/$(echo $name_run)/list_$(echo $name_run).t > $ArchDir/$name_run/mastercat_$PSF.txt
         if [ ! "$name_run" == FC17 ] && [ ! "$name_run" == FC17SB ] && [ ! "$name_run" == FC17gridmcal ]
         then
             python2.7 $srcDir/propagate_chi2nu.py MasterCat_$(echo $name_run)_set_$PSF.fits ## add reduced chi-square from Griffith catalogue
@@ -123,6 +123,7 @@ done
 numPSF=`ls *set*.fits | wc -l`
 echo "Number of PSF sets = " $numPSF
 
+echo Merging command is $srcDir/merge_tables.py $numPSF $CatDir MasterCat_$(echo $name_run) MasterCat_$(echo $name_run)_all_$(echo $numPSF)_PSF.fits
 if [ ! -f MasterCat_$(echo $name_run)_all_$(echo $numPSF)_PSF.fits ]
 then
     echo 'Merging the catalogues'
